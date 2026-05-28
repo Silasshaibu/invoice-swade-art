@@ -1,0 +1,7 @@
+.next/
+node_modules/
+.env.local
+.vercel/
+*.tsbuildinfo
+electron-app/node_modules/
+electron-app/dist/

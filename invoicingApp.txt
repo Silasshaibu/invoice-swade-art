@@ -1,0 +1,1 @@
+Implement the invoicing app such that i have a website and a software (electron). They  both sync. Use nextjs, vercel, neon.
