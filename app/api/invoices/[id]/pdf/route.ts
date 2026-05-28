@@ -24,7 +24,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const currency = inv.currency || user.currency || 'USD'
   const fmt = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(n)
 
-  const itemRows = items.map((item: { description: string; quantity: number; unit_price: number; amount: number }) => `
+  const itemRows = (items as { description: string; quantity: number; unit_price: number; amount: number }[]).map((item) => `
     <tr>
       <td>${item.description}</td>
       <td class="num">${item.quantity}</td>

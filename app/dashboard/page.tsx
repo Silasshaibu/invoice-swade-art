@@ -61,7 +61,7 @@ export default function DashboardPage() {
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
               <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#94a3b8' }} />
               <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} tickFormatter={v => `$${v}`} />
-              <Tooltip formatter={(v: number) => [fmt(v), 'Revenue']} />
+              <Tooltip formatter={(v: unknown) => fmt(Number(v))} />
               <Area type="monotone" dataKey="revenue" stroke="#4f46e5" strokeWidth={2} fill="url(#rev)" />
             </AreaChart>
           </ResponsiveContainer>

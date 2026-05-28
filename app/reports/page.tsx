@@ -50,7 +50,7 @@ export default function ReportsPage() {
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
               <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#94a3b8' }} />
               <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} tickFormatter={v => `$${v}`} />
-              <Tooltip formatter={(v: number) => [fmt(v), 'Revenue']} />
+              <Tooltip formatter={(v: unknown) => fmt(Number(v))} />
               <Bar dataKey="revenue" fill="#4f46e5" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
