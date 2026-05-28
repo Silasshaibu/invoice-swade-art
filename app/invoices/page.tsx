@@ -38,7 +38,7 @@ export default function InvoicesPage() {
     <AppShell>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <h1 style={{ fontSize: '22px', fontWeight: 700 }}>Invoices</h1>
-        <Link href="/invoices/new" className="btn btn-primary">+ New Invoice</Link>
+        <Link href="/invoices/create" className="btn btn-primary">+ New Invoice</Link>
       </div>
 
       <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>

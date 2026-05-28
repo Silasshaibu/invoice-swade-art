@@ -30,7 +30,7 @@ export default function ClientsPage() {
     <AppShell>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <h1 style={{ fontSize: '22px', fontWeight: 700 }}>Clients</h1>
-        <Link href="/clients/new" className="btn btn-primary">+ New Client</Link>
+        <Link href="/clients/create" className="btn btn-primary">+ New Client</Link>
       </div>
       <div className="card" style={{ padding: '0' }}>
         <div style={{ padding: '16px 20px', borderBottom: '1px solid #f1f5f9' }}>

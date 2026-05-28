@@ -37,7 +37,7 @@ export default function DashboardPage() {
     <AppShell>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '28px' }}>
         <h1 style={{ fontSize: '22px', fontWeight: 700 }}>Dashboard</h1>
-        <Link href="/invoices/new" className="btn btn-primary">+ New Invoice</Link>
+        <Link href="/invoices/create" className="btn btn-primary">+ New Invoice</Link>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '28px' }}>
