@@ -1,10 +1,28 @@
-import { neon } from '@neondatabase/serverless'
+import { neon, NeonQueryFunction } from '@neondatabase/serverless'
 
-if (!process.env.DATABASE_URL) {
-  throw new Error('DATABASE_URL environment variable is not set')
+type Sql = NeonQueryFunction<false, false>
+
+let _sql: Sql | undefined
+
+function getDb(): Sql {
+  if (!_sql) {
+    if (!process.env.DATABASE_URL) {
+      throw new Error('DATABASE_URL environment variable is not set')
+    }
+    _sql = neon(process.env.DATABASE_URL)
+  }
+  return _sql
 }
 
-export const sql = neon(process.env.DATABASE_URL)
+// Lazy proxy — defers neon init to request time, not module evaluation (build time)
+export const sql = new Proxy((() => {}) as unknown as Sql, {
+  apply(_t, thisArg, args) {
+    return Reflect.apply(getDb() as unknown as Function, thisArg, args)
+  },
+  get(_t, prop) {
+    return Reflect.get(getDb(), prop)
+  },
+})
 
 let initialised = false
 
