@@ -40,12 +40,23 @@ export async function initDB() {
     )
   `
   // Invoice-specific profile columns — safe to run on existing renderfarm users table
-  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS name            TEXT NOT NULL DEFAULT ''`
-  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS company_name    TEXT DEFAULT ''`
-  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS company_address TEXT DEFAULT ''`
-  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS company_phone   TEXT DEFAULT ''`
-  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS company_logo    TEXT DEFAULT ''`
-  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS currency        TEXT DEFAULT 'USD'`
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS name              TEXT NOT NULL DEFAULT ''`
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS company_name      TEXT DEFAULT ''`
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS company_address   TEXT DEFAULT ''`
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS company_phone     TEXT DEFAULT ''`
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS company_email     TEXT DEFAULT ''`
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS company_website   TEXT DEFAULT ''`
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS company_logo      TEXT DEFAULT ''`
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS tax_id            TEXT DEFAULT ''`
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS currency          TEXT DEFAULT 'USD'`
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS invoice_prefix    TEXT DEFAULT 'INV'`
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS next_invoice_num  TEXT DEFAULT '001'`
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS payment_terms     INTEGER DEFAULT 14`
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS invoice_notes     TEXT DEFAULT ''`
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS pdf_template      TEXT DEFAULT 'professional'`
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS email_sent        BOOLEAN DEFAULT TRUE`
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS email_received    BOOLEAN DEFAULT TRUE`
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS email_overdue     BOOLEAN DEFAULT TRUE`
 
   await sql`
     CREATE TABLE IF NOT EXISTS clients (
@@ -121,16 +132,34 @@ export async function initDB() {
     )
   `
 
-  // Seed default admin
-  const existing = await sql`SELECT id FROM users LIMIT 1`
-  if (existing.length === 0) {
-    const bcrypt = await import('bcryptjs')
-    const hash = await bcrypt.hash('password123', 10)
-    await sql`
-      INSERT INTO users (email, password_hash, name, is_admin)
-      VALUES ('admin@invoice.swade-art.com', ${hash}, 'Admin', TRUE)
-      ON CONFLICT DO NOTHING
-    `
+  await sql`
+    CREATE TABLE IF NOT EXISTS audit_logs (
+      id         SERIAL PRIMARY KEY,
+      user_id    INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      action     TEXT NOT NULL,
+      resource   TEXT NOT NULL,
+      resource_id INTEGER,
+      changes    TEXT,
+      ip_address TEXT,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `
+  await sql`CREATE INDEX IF NOT EXISTS idx_audit_user ON audit_logs(user_id)`
+  await sql`CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_logs(created_at)`
+
+  // Seed default admin (only if SEED_ADMIN_PASSWORD env var is set)
+  const seedPassword = process.env.SEED_ADMIN_PASSWORD
+  if (seedPassword) {
+    const existing = await sql`SELECT id FROM users WHERE email = 'admin@invoice.swade-art.com' LIMIT 1`
+    if (existing.length === 0) {
+      const bcrypt = await import('bcryptjs')
+      const hash = await bcrypt.hash(seedPassword, 10)
+      await sql`
+        INSERT INTO users (email, password_hash, name, is_admin)
+        VALUES ('admin@invoice.swade-art.com', ${hash}, 'Admin', TRUE)
+        ON CONFLICT DO NOTHING
+      `
+    }
   }
 }
 

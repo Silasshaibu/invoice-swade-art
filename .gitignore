@@ -5,3 +5,5 @@ node_modules/
 *.tsbuildinfo
 electron-app/node_modules/
 electron-app/dist/
+
+.vercel

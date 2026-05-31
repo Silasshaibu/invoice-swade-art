@@ -37,7 +37,7 @@ export default function InvoicesPage() {
   return (
     <AppShell>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h1 style={{ fontSize: '22px', fontWeight: 700 }}>Invoices</h1>
+        <h1 style={{ fontSize: '22px', fontWeight: 500 }}>Invoices</h1>
         <Link href="/invoices/create" className="btn btn-primary">+ New Invoice</Link>
       </div>
 
@@ -45,34 +45,34 @@ export default function InvoicesPage() {
         {STATUSES.map(s => (
           <button key={s} onClick={() => setFilter(s)} className="btn" style={{
             padding: '6px 14px', fontSize: '13px',
-            background: filter === s ? '#4f46e5' : '#f1f5f9',
-            color: filter === s ? 'white' : '#64748b',
+            background: filter === s ? '#111827' : '#f3f4f6',
+            color: filter === s ? 'white' : '#6b7280',
             border: 'none',
           }}>
             {s.charAt(0).toUpperCase() + s.slice(1)}
           </button>
         ))}
-        <input className="input" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search…" style={{ maxWidth: '200px', marginLeft: 'auto' }} />
+        <input className="input" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search…" style={{ maxWidth: '200px', width: '100%' }} />
       </div>
 
-      <div className="card" style={{ padding: 0 }}>
+      <div className="card" style={{ padding: 0, width: '100%' }}>
         {loading ? (
-          <div style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>Loading…</div>
+          <div style={{ padding: '40px', textAlign: 'center', color: '#6b7280' }}>Loading…</div>
         ) : (
-          <table>
+          <div className="table-scroll" style={{ width: '100%' }}><table style={{ width: '100%' }}>
             <thead>
               <tr><th>Invoice #</th><th>Client</th><th>Date</th><th>Due</th><th>Status</th><th style={{ textAlign: 'right' }}>Amount</th><th></th></tr>
             </thead>
             <tbody>
               {filtered.length === 0 && (
-                <tr><td colSpan={7} style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>No invoices</td></tr>
+                <tr><td colSpan={7} style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>No invoices</td></tr>
               )}
               {filtered.map(inv => (
                 <tr key={inv.id}>
-                  <td><Link href={`/invoices/${inv.id}`} style={{ color: '#4f46e5', textDecoration: 'none', fontWeight: 600 }}>{inv.invoice_number}</Link></td>
+                  <td><Link href={`/invoices/${inv.id}`} style={{ color: '#111827', textDecoration: 'none', fontWeight: 600 }}>{inv.invoice_number}</Link></td>
                   <td>{inv.client_name}</td>
-                  <td style={{ color: '#64748b', fontSize: '13px' }}>{inv.issue_date}</td>
-                  <td style={{ color: inv.status === 'overdue' ? '#ef4444' : '#64748b', fontSize: '13px' }}>{inv.due_date || '—'}</td>
+                  <td style={{ color: '#6b7280', fontSize: '13px' }}>{inv.issue_date}</td>
+                  <td style={{ color: inv.status === 'overdue' ? '#dc2626' : '#6b7280', fontSize: '13px' }}>{inv.due_date || '—'}</td>
                   <td><span className={`badge ${STATUS_BADGE[inv.status]}`}>{inv.status}</span></td>
                   <td style={{ textAlign: 'right', fontWeight: 600 }}>{fmt(inv.total)}</td>
                   <td style={{ textAlign: 'right' }}>
@@ -81,7 +81,7 @@ export default function InvoicesPage() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         )}
       </div>
     </AppShell>

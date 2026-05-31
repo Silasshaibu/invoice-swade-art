@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { setAuth } from '@/lib/auth'
+import { Spinner } from '@/components/Spinner'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -27,21 +28,23 @@ export default function LoginPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #1e293b 0%, #312e81 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+    <div style={{ minHeight: '100vh', background: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
       <div style={{ width: '100%', maxWidth: '440px' }}>
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <div style={{ fontSize: '28px', fontWeight: 800, color: 'white', marginBottom: '8px' }}>Invoice</div>
-          <div style={{ color: '#94a3b8', fontSize: '14px' }}>Professional invoicing by swade-art</div>
+          <div style={{ fontSize: '28px', fontWeight: 800, color: '#030213', marginBottom: '8px' }}>Invoice</div>
+          <div style={{ color: '#6b7280', fontSize: '14px' }}>Professional invoicing by swade-art</div>
         </div>
-        <div className="card" style={{ borderRadius: '16px' }}>
-          <div style={{ display: 'flex', gap: '4px', background: '#f1f5f9', borderRadius: '8px', padding: '4px', marginBottom: '24px' }}>
+        <div className="card" style={{ borderRadius: '8px', padding: '32px' }}>
+          <div style={{ display: 'flex', gap: '4px', background: '#f3f4f6', borderRadius: '8px', padding: '4px', marginBottom: '24px' }}>
             {(['login', 'register'] as const).map(t => (
-              <button key={t} onClick={() => setTab(t)} className="btn" style={{
+              <button key={t} onClick={() => setTab(t)} className="btn" disabled={loading} style={{
                 flex: 1, justifyContent: 'center',
                 background: tab === t ? 'white' : 'transparent',
-                color: tab === t ? '#4f46e5' : '#94a3b8',
+                color: tab === t ? '#111827' : '#6b7280',
                 boxShadow: tab === t ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
                 fontWeight: tab === t ? 600 : 400,
+                opacity: loading ? 0.6 : 1,
+                cursor: loading ? 'not-allowed' : 'pointer',
               }}>
                 {t === 'login' ? 'Sign In' : 'Register'}
               </button>
@@ -51,20 +54,21 @@ export default function LoginPage() {
             {tab === 'register' && (
               <div>
                 <label className="label">Full Name</label>
-                <input className="input" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Your name" required />
+                <input className="input" disabled={loading} value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Your name" required style={{ opacity: loading ? 0.6 : 1 }} />
               </div>
             )}
             <div>
               <label className="label">Email</label>
-              <input className="input" type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="you@example.com" required />
+              <input className="input" disabled={loading} type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="you@example.com" required style={{ opacity: loading ? 0.6 : 1 }} />
             </div>
             <div>
               <label className="label">Password</label>
-              <input className="input" type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} placeholder="••••••••" required minLength={6} />
+              <input className="input" disabled={loading} type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} placeholder="••••••••" required minLength={6} style={{ opacity: loading ? 0.6 : 1 }} />
             </div>
-            {error && <div style={{ background: '#fef2f2', color: '#ef4444', padding: '10px 14px', borderRadius: '8px', fontSize: '13px' }}>{error}</div>}
-            <button className="btn btn-primary" type="submit" disabled={loading} style={{ justifyContent: 'center', padding: '12px', fontSize: '15px', fontWeight: 600 }}>
-              {loading ? 'Please wait…' : tab === 'login' ? 'Sign In' : 'Create Account'}
+            {error && <div style={{ background: '#fee2e2', color: '#dc2626', padding: '10px 14px', borderRadius: '6px', fontSize: '13px' }}>{error}</div>}
+            <button className="btn btn-primary" type="submit" disabled={loading} style={{ justifyContent: 'center', padding: '12px', fontSize: '15px', fontWeight: 600, gap: '8px' }}>
+              {loading && <Spinner size="sm" />}
+              {loading ? 'Signing in…' : tab === 'login' ? 'Sign In' : 'Create Account'}
             </button>
           </form>
         </div>

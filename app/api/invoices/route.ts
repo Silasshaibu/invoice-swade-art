@@ -9,6 +9,8 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const status = searchParams.get('status')
   const clientId = searchParams.get('client_id')
+  const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100)
+  const offset = Math.max(parseInt(searchParams.get('offset') || '0'), 0)
 
   let rows
   if (status && clientId) {
@@ -17,6 +19,7 @@ export async function GET(req: NextRequest) {
       FROM invoices i JOIN clients c ON i.client_id = c.id
       WHERE i.user_id = ${Number(auth.sub)} AND i.status = ${status} AND i.client_id = ${Number(clientId)}
       ORDER BY i.created_at DESC
+      LIMIT ${limit} OFFSET ${offset}
     `
   } else if (status) {
     rows = await sql`
@@ -24,6 +27,7 @@ export async function GET(req: NextRequest) {
       FROM invoices i JOIN clients c ON i.client_id = c.id
       WHERE i.user_id = ${Number(auth.sub)} AND i.status = ${status}
       ORDER BY i.created_at DESC
+      LIMIT ${limit} OFFSET ${offset}
     `
   } else if (clientId) {
     rows = await sql`
@@ -31,6 +35,7 @@ export async function GET(req: NextRequest) {
       FROM invoices i JOIN clients c ON i.client_id = c.id
       WHERE i.user_id = ${Number(auth.sub)} AND i.client_id = ${Number(clientId)}
       ORDER BY i.created_at DESC
+      LIMIT ${limit} OFFSET ${offset}
     `
   } else {
     rows = await sql`
@@ -38,6 +43,7 @@ export async function GET(req: NextRequest) {
       FROM invoices i JOIN clients c ON i.client_id = c.id
       WHERE i.user_id = ${Number(auth.sub)}
       ORDER BY i.created_at DESC
+      LIMIT ${limit} OFFSET ${offset}
     `
   }
   return Response.json(rows)
