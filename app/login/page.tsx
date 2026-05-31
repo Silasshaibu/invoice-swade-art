@@ -67,7 +67,7 @@ export default function LoginPage() {
             </div>
             {error && <div style={{ background: '#fee2e2', color: '#dc2626', padding: '10px 14px', borderRadius: '6px', fontSize: '13px' }}>{error}</div>}
             <button className="btn btn-primary" type="submit" disabled={loading} style={{ justifyContent: 'center', padding: '12px', fontSize: '15px', fontWeight: 600, gap: '8px' }}>
-              {loading && <Spinner size="sm" />}
+              {loading && <Spinner size="sm" color="white" />}
               {loading ? 'Signing in…' : tab === 'login' ? 'Sign In' : 'Create Account'}
             </button>
           </form>

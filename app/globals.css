@@ -55,11 +55,21 @@ body {
   border: none;
 }
 
+.btn:disabled {
+  opacity: 1;
+  cursor: not-allowed;
+}
+
 .btn-primary {
   background: #111827;
   color: white;
 }
-.btn-primary:hover { background: #1f2937; }
+.btn-primary:hover {
+  background: #1f2937;
+}
+.btn-primary:disabled {
+  background: #1f2937;
+}
 
 .btn-secondary {
   background: white;

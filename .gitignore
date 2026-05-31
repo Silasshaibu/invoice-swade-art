@@ -7,3 +7,4 @@ electron-app/node_modules/
 electron-app/dist/
 
 .vercel
+.env*

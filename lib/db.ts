@@ -39,24 +39,27 @@ export async function initDB() {
       created_at      TIMESTAMPTZ DEFAULT NOW()
     )
   `
-  // Invoice-specific profile columns — safe to run on existing renderfarm users table
-  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS name              TEXT NOT NULL DEFAULT ''`
-  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS company_name      TEXT DEFAULT ''`
-  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS company_address   TEXT DEFAULT ''`
-  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS company_phone     TEXT DEFAULT ''`
-  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS company_email     TEXT DEFAULT ''`
-  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS company_website   TEXT DEFAULT ''`
-  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS company_logo      TEXT DEFAULT ''`
-  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS tax_id            TEXT DEFAULT ''`
-  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS currency          TEXT DEFAULT 'USD'`
-  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS invoice_prefix    TEXT DEFAULT 'INV'`
-  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS next_invoice_num  TEXT DEFAULT '001'`
-  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS payment_terms     INTEGER DEFAULT 14`
-  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS invoice_notes     TEXT DEFAULT ''`
-  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS pdf_template      TEXT DEFAULT 'professional'`
-  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS email_sent        BOOLEAN DEFAULT TRUE`
-  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS email_received    BOOLEAN DEFAULT TRUE`
-  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS email_overdue     BOOLEAN DEFAULT TRUE`
+
+  // Run all ALTER TABLE commands in parallel for faster initialization
+  await Promise.all([
+    sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS name              TEXT NOT NULL DEFAULT ''`,
+    sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS company_name      TEXT DEFAULT ''`,
+    sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS company_address   TEXT DEFAULT ''`,
+    sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS company_phone     TEXT DEFAULT ''`,
+    sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS company_email     TEXT DEFAULT ''`,
+    sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS company_website   TEXT DEFAULT ''`,
+    sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS company_logo      TEXT DEFAULT ''`,
+    sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS tax_id            TEXT DEFAULT ''`,
+    sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS currency          TEXT DEFAULT 'USD'`,
+    sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS invoice_prefix    TEXT DEFAULT 'INV'`,
+    sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS next_invoice_num  TEXT DEFAULT '001'`,
+    sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS payment_terms     INTEGER DEFAULT 14`,
+    sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS invoice_notes     TEXT DEFAULT ''`,
+    sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS pdf_template      TEXT DEFAULT 'professional'`,
+    sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS email_sent        BOOLEAN DEFAULT TRUE`,
+    sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS email_received    BOOLEAN DEFAULT TRUE`,
+    sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS email_overdue     BOOLEAN DEFAULT TRUE`,
+  ])
 
   await sql`
     CREATE TABLE IF NOT EXISTS clients (
@@ -94,9 +97,6 @@ export async function initDB() {
       updated_at     TIMESTAMPTZ DEFAULT NOW()
     )
   `
-  await sql`CREATE INDEX IF NOT EXISTS idx_invoices_user   ON invoices(user_id)`
-  await sql`CREATE INDEX IF NOT EXISTS idx_invoices_client ON invoices(client_id)`
-  await sql`CREATE INDEX IF NOT EXISTS idx_invoices_status ON invoices(status)`
 
   await sql`
     CREATE TABLE IF NOT EXISTS invoice_items (
@@ -108,7 +108,6 @@ export async function initDB() {
       amount      NUMERIC(10,2) NOT NULL DEFAULT 0
     )
   `
-  await sql`CREATE INDEX IF NOT EXISTS idx_items_invoice ON invoice_items(invoice_id)`
 
   await sql`
     CREATE TABLE IF NOT EXISTS payments (
@@ -123,7 +122,6 @@ export async function initDB() {
       created_at   TIMESTAMPTZ DEFAULT NOW()
     )
   `
-  await sql`CREATE INDEX IF NOT EXISTS idx_payments_invoice ON payments(invoice_id)`
 
   await sql`
     CREATE TABLE IF NOT EXISTS token_blocklist (
@@ -144,8 +142,17 @@ export async function initDB() {
       created_at TIMESTAMPTZ DEFAULT NOW()
     )
   `
-  await sql`CREATE INDEX IF NOT EXISTS idx_audit_user ON audit_logs(user_id)`
-  await sql`CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_logs(created_at)`
+
+  // Create all indexes in parallel
+  await Promise.all([
+    sql`CREATE INDEX IF NOT EXISTS idx_invoices_user   ON invoices(user_id)`,
+    sql`CREATE INDEX IF NOT EXISTS idx_invoices_client ON invoices(client_id)`,
+    sql`CREATE INDEX IF NOT EXISTS idx_invoices_status ON invoices(status)`,
+    sql`CREATE INDEX IF NOT EXISTS idx_items_invoice ON invoice_items(invoice_id)`,
+    sql`CREATE INDEX IF NOT EXISTS idx_payments_invoice ON payments(invoice_id)`,
+    sql`CREATE INDEX IF NOT EXISTS idx_audit_user ON audit_logs(user_id)`,
+    sql`CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_logs(created_at)`,
+  ])
 
   // Seed default admin (only if SEED_ADMIN_PASSWORD env var is set)
   const seedPassword = process.env.SEED_ADMIN_PASSWORD
