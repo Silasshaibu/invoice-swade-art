@@ -10,7 +10,13 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json()
-    const { email, password, name } = registerSchema.parse(body)
+    const validated = registerSchema.safeParse(body)
+
+    if (!validated.success) {
+      return Response.json({ error: 'Invalid input', details: validated.error.issues }, { status: 400 })
+    }
+
+    const { email, password, name } = validated.data
 
     const existing = await sql`SELECT id FROM users WHERE email = ${email.toLowerCase()}`
     if (existing.length > 0) {
@@ -28,9 +34,7 @@ export async function POST(req: NextRequest) {
     const token = signToken({ sub: String(user.id), email: user.email, name: user.name, isAdmin: user.is_admin, jti })
     return Response.json({ token, user: { id: user.id, email: user.email, name: user.name, isAdmin: user.is_admin } })
   } catch (error: unknown) {
-    if (error instanceof Error && 'errors' in error) {
-      return Response.json({ error: 'Invalid input', details: error }, { status: 400 })
-    }
+    console.error('Register error:', error)
     return Response.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
