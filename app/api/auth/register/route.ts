@@ -6,9 +6,9 @@ import { signToken } from '@/lib/auth-server'
 import { registerSchema } from '@/lib/validation'
 
 export async function POST(req: NextRequest) {
-  await initDB()
-
   try {
+    await initDB()
+
     const body = await req.json()
     const validated = registerSchema.safeParse(body)
 
@@ -35,6 +35,7 @@ export async function POST(req: NextRequest) {
     return Response.json({ token, user: { id: user.id, email: user.email, name: user.name, isAdmin: user.is_admin } })
   } catch (error: unknown) {
     console.error('Register error:', error)
-    return Response.json({ error: 'Internal server error' }, { status: 500 })
+    const msg = error instanceof Error ? error.message : String(error)
+    return Response.json({ error: 'Registration failed', message: msg }, { status: 500 })
   }
 }

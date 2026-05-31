@@ -8,14 +8,14 @@ import { rateLimit } from '@/lib/rate-limit'
 import { logAudit } from '@/lib/audit'
 
 export async function POST(req: NextRequest) {
-  const ip = req.headers.get('x-forwarded-for') || req.headers.get('cf-connecting-ip') || 'unknown'
-  if (!rateLimit(`login:${ip}`, 5, 900000)) {
-    return Response.json({ error: 'Too many login attempts. Try again later.' }, { status: 429 })
-  }
-
-  await initDB()
-
   try {
+    const ip = req.headers.get('x-forwarded-for') || req.headers.get('cf-connecting-ip') || 'unknown'
+    if (!rateLimit(`login:${ip}`, 5, 900000)) {
+      return Response.json({ error: 'Too many login attempts. Try again later.' }, { status: 429 })
+    }
+
+    await initDB()
+
     const body = await req.json()
     const { email, password } = loginSchema.parse(body)
 
