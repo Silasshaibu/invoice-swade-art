@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "node scratch/seed_admin.js && next build",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint"
   },
