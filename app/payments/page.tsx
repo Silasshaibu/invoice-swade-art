@@ -56,8 +56,8 @@ export default function PaymentsPage() {
   })
 
   const stats = {
-    total_received: filtered.reduce((sum, p) => sum + p.amount, 0),
-    processing: filtered.filter(p => p.status === 'processing').reduce((sum, p) => sum + p.amount, 0),
+    total_received: filtered.reduce((sum, p) => sum + Number(p.amount || 0), 0),
+    processing: filtered.filter(p => p.status === 'processing').reduce((sum, p) => sum + Number(p.amount || 0), 0),
     count: filtered.length,
   }
 
@@ -157,7 +157,7 @@ export default function PaymentsPage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 {methods.filter(m => m !== 'all').map(m => {
                   const count = filtered.filter(p => p.method === m).length
-                  const amount = filtered.filter(p => p.method === m).reduce((sum, p) => sum + p.amount, 0)
+                  const amount = filtered.filter(p => p.method === m).reduce((sum, p) => sum + Number(p.amount || 0), 0)
                   return (
                     <div key={m} style={{ fontSize: '12px', display: 'flex', justifyContent: 'space-between', color: '#6b7280', padding: '6px 0', borderBottom: '1px solid #e5e7eb' }}>
                       <span>{PAYMENT_METHODS[m] || m}</span>
