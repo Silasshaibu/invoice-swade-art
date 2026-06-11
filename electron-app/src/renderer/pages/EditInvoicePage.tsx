@@ -27,7 +27,7 @@ export default function EditInvoicePage({ id, nav }: { id: number; nav: (p: Page
     ]).then(([cls, inv]) => {
       setClients(cls)
       setInv(inv)
-      setForm({ client_id: String(inv.client_id), status: inv.status, issue_date: inv.issue_date, due_date: inv.due_date || '', notes: inv.notes || '', tax_rate: String(inv.tax_rate), discount: String(inv.discount), currency: inv.currency, invoice_number: inv.invoice_number })
+      setForm({ client_id: String(inv.client_id), status: inv.status, issue_date: inv.issue_date ? inv.issue_date.split('T')[0] : '', due_date: inv.due_date ? inv.due_date.split('T')[0] : '', notes: inv.notes || '', tax_rate: String(inv.tax_rate), discount: String(inv.discount), currency: inv.currency, invoice_number: inv.invoice_number })
       setItems(inv.items?.length ? inv.items : [emptyItem()])
     })
   }, [id])

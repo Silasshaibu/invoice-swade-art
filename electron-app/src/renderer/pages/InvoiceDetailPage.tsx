@@ -56,6 +56,11 @@ export default function InvoiceDetailPage({ id, nav }: { id: number; nav: (p: Pa
 
   const fmt = (n: number) => `$${Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`
 
+  const formatDate = (dateStr: string | null | undefined) => {
+    if (!dateStr) return '—'
+    return dateStr.split('T')[0]
+  }
+
   if (!inv) return <div style={{ color: '#94a3b8', paddingTop: '40px' }}>Loading…</div>
 
   const totalPaid = (inv.payments || []).reduce((s, p) => s + Number(p.amount), 0)
@@ -85,8 +90,8 @@ export default function InvoiceDetailPage({ id, nav }: { id: number; nav: (p: Pa
         </div>
         <div className="card">
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-            <div><div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600 }}>ISSUE</div><div style={{ marginTop: '3px', fontWeight: 500 }}>{inv.issue_date}</div></div>
-            <div><div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600 }}>DUE</div><div style={{ marginTop: '3px', fontWeight: 500 }}>{inv.due_date || '—'}</div></div>
+            <div><div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600 }}>ISSUE</div><div style={{ marginTop: '3px', fontWeight: 500 }}>{formatDate(inv.issue_date)}</div></div>
+            <div><div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600 }}>DUE</div><div style={{ marginTop: '3px', fontWeight: 500 }}>{formatDate(inv.due_date)}</div></div>
             <div><div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600 }}>TOTAL</div><div style={{ marginTop: '3px', fontWeight: 700, fontSize: '17px' }}>{fmt(inv.total)}</div></div>
             <div><div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600 }}>BALANCE</div><div style={{ marginTop: '3px', fontWeight: 700, fontSize: '17px', color: balance > 0 ? '#ef4444' : '#22c55e' }}>{fmt(balance)}</div></div>
           </div>
@@ -136,7 +141,7 @@ export default function InvoiceDetailPage({ id, nav }: { id: number; nav: (p: Pa
           ? <div style={{ color: '#94a3b8', fontSize: '13px' }}>No payments yet.</div>
           : <table><thead><tr><th>Date</th><th>Method</th><th>Reference</th><th style={{ textAlign: 'right' }}>Amount</th></tr></thead><tbody>
             {(inv.payments || []).map(p => (
-              <tr key={p.id}><td>{p.payment_date}</td><td style={{ textTransform: 'capitalize' }}>{(p.method || '').replace('_', ' ')}</td><td>{p.reference || '—'}</td><td style={{ textAlign: 'right', fontWeight: 600, color: '#22c55e' }}>{fmt(Number(p.amount))}</td></tr>
+              <tr key={p.id}><td>{formatDate(p.payment_date)}</td><td style={{ textTransform: 'capitalize' }}>{(p.method || '').replace('_', ' ')}</td><td>{p.reference || '—'}</td><td style={{ textAlign: 'right', fontWeight: 600, color: '#22c55e' }}>{fmt(Number(p.amount))}</td></tr>
             ))}
           </tbody></table>
         }

@@ -34,6 +34,11 @@ export default function InvoicesPage() {
     (inv.client_name || '').toLowerCase().includes(search.toLowerCase())
   )
 
+  const formatDate = (dateStr: string | null | undefined) => {
+    if (!dateStr) return '—'
+    return dateStr.split('T')[0]
+  }
+
   return (
     <AppShell>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -71,8 +76,8 @@ export default function InvoicesPage() {
                 <tr key={inv.id}>
                   <td><Link href={`/invoices/${inv.id}`} style={{ color: '#111827', textDecoration: 'none', fontWeight: 600 }}>{inv.invoice_number}</Link></td>
                   <td>{inv.client_name}</td>
-                  <td style={{ color: '#6b7280', fontSize: '13px' }}>{inv.issue_date}</td>
-                  <td style={{ color: inv.status === 'overdue' ? '#dc2626' : '#6b7280', fontSize: '13px' }}>{inv.due_date || '—'}</td>
+                  <td style={{ color: '#6b7280', fontSize: '13px' }}>{formatDate(inv.issue_date)}</td>
+                  <td style={{ color: inv.status === 'overdue' ? '#dc2626' : '#6b7280', fontSize: '13px' }}>{formatDate(inv.due_date)}</td>
                   <td><span className={`badge ${STATUS_BADGE[inv.status]}`}>{inv.status}</span></td>
                   <td style={{ textAlign: 'right', fontWeight: 600 }}>{fmt(inv.total)}</td>
                   <td style={{ textAlign: 'right' }}>

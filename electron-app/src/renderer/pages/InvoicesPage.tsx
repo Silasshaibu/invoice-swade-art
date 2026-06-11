@@ -22,6 +22,11 @@ export default function InvoicesPage({ nav }: { nav: (p: Page) => void }) {
   const fmt = (n: number) => `$${Number(n).toLocaleString('en-US', { minimumFractionDigits: 2 })}`
   const filtered = invoices.filter(i => i.invoice_number.toLowerCase().includes(search.toLowerCase()) || i.client_name?.toLowerCase().includes(search.toLowerCase()))
 
+  const formatDate = (dateStr: string | null | undefined) => {
+    if (!dateStr) return '—'
+    return dateStr.split('T')[0]
+  }
+
   return (
     <>
       <div className="page-header">
@@ -52,8 +57,8 @@ export default function InvoicesPage({ nav }: { nav: (p: Page) => void }) {
                 <tr key={inv.id} style={{ cursor: 'pointer' }} onClick={() => nav({ name: 'invoice', id: inv.id })}>
                   <td style={{ fontWeight: 600, color: '#4f46e5' }}>{inv.invoice_number}</td>
                   <td>{inv.client_name}</td>
-                  <td style={{ color: '#64748b', fontSize: '12px' }}>{inv.issue_date}</td>
-                  <td style={{ color: inv.status === 'overdue' ? '#ef4444' : '#64748b', fontSize: '12px' }}>{inv.due_date || '—'}</td>
+                  <td style={{ color: '#64748b', fontSize: '12px' }}>{formatDate(inv.issue_date)}</td>
+                  <td style={{ color: inv.status === 'overdue' ? '#ef4444' : '#64748b', fontSize: '12px' }}>{formatDate(inv.due_date)}</td>
                   <td><span className={`badge ${STATUS_BADGE[inv.status]}`}>{inv.status}</span></td>
                   <td style={{ textAlign: 'right', fontWeight: 600 }}>{fmt(inv.total)}</td>
                 </tr>

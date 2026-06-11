@@ -55,6 +55,11 @@ export default function InvoiceDetailPage() {
   const totalPaid = (inv.payments || []).reduce((s, p) => s + Number(p.amount), 0)
   const balance = Number(inv.total) - totalPaid
 
+  const formatDate = (dateStr: string | null | undefined) => {
+    if (!dateStr) return '—'
+    return dateStr.split('T')[0]
+  }
+
   return (
     <AppShell>
       <div style={{ maxWidth: '860px' }}>
@@ -76,8 +81,8 @@ export default function InvoiceDetailPage() {
           </div>
           <div className="card">
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              <div><div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 600 }}>ISSUE DATE</div><div style={{ fontWeight: 500, marginTop: '4px' }}>{inv.issue_date}</div></div>
-              <div><div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 600 }}>DUE DATE</div><div style={{ fontWeight: 500, marginTop: '4px', color: inv.status === 'overdue' ? '#ef4444' : 'inherit' }}>{inv.due_date || '—'}</div></div>
+              <div><div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 600 }}>ISSUE DATE</div><div style={{ fontWeight: 500, marginTop: '4px' }}>{formatDate(inv.issue_date)}</div></div>
+              <div><div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 600 }}>DUE DATE</div><div style={{ fontWeight: 500, marginTop: '4px', color: inv.status === 'overdue' ? '#ef4444' : 'inherit' }}>{formatDate(inv.due_date)}</div></div>
               <div><div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 600 }}>TOTAL</div><div style={{ fontWeight: 700, fontSize: '18px', marginTop: '4px', color: '#1e293b' }}>{fmt(inv.total)}</div></div>
               <div><div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 600 }}>BALANCE</div><div style={{ fontWeight: 700, fontSize: '18px', marginTop: '4px', color: balance > 0 ? '#ef4444' : '#22c55e' }}>{fmt(balance)}</div></div>
             </div>
@@ -145,7 +150,7 @@ export default function InvoiceDetailPage() {
               <tbody>
                 {(inv.payments || []).map(p => (
                   <tr key={p.id}>
-                    <td>{p.payment_date}</td>
+                    <td>{formatDate(p.payment_date)}</td>
                     <td style={{ textTransform: 'capitalize' }}>{(p.method || '').replace('_', ' ')}</td>
                     <td>{p.reference || '—'}</td>
                     <td style={{ textAlign: 'right', fontWeight: 600, color: '#22c55e' }}>{fmt(Number(p.amount))}</td>
