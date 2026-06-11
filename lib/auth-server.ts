@@ -52,3 +52,15 @@ export async function requireAuth(req: NextRequest): Promise<JWTPayload | Respon
 export function isAuthError(val: JWTPayload | Response): val is Response {
   return val instanceof Response
 }
+
+export async function requireAdmin(req: NextRequest): Promise<JWTPayload | Response> {
+  const auth = await requireAuth(req)
+  if (isAuthError(auth)) return auth
+  if (!auth.isAdmin) {
+    return new Response(JSON.stringify({ error: 'Forbidden: Admin access required' }), {
+      status: 403,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  }
+  return auth
+}

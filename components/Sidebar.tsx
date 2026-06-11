@@ -2,7 +2,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { clearAuth, getUser } from '@/lib/auth'
-import { LayoutDashboard, FileText, Users, BarChart2, CreditCard, Settings, LogOut, X } from 'lucide-react'
+import { LayoutDashboard, FileText, Users, BarChart2, CreditCard, Settings, LogOut, X, Shield } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import type { AuthUser } from '@/types'
 
@@ -87,6 +87,22 @@ export default function Sidebar({ isOpen = true, onClose }: SidebarProps) {
             </Link>
           )
         })}
+        {user?.isAdmin && (
+          <Link
+            href="/admin/users"
+            onClick={onClose}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '12px',
+              padding: '9px 12px', borderRadius: '8px', textDecoration: 'none',
+              fontSize: '14px', fontWeight: pathname.startsWith('/admin') ? 500 : 400,
+              background: pathname.startsWith('/admin') ? '#e5e7eb' : 'transparent',
+              color: pathname.startsWith('/admin') ? '#111827' : '#4b5563',
+              transition: 'all 0.15s',
+            }}>
+            <Shield size={16} />
+            Admin Users
+          </Link>
+        )}
       </nav>
 
       <div style={{ padding: '16px', borderTop: '1px solid #d1d5db' }}>
