@@ -55,10 +55,26 @@ export default function PaymentsPage() {
     return matchSearch && matchMethod && matchFrom && matchTo
   })
 
+  const now = new Date()
+  const currentYear = now.getFullYear()
+  const currentMonth = now.getMonth()
+
+  const thisMonthPayments = payments.filter(p => {
+    const d = new Date(p.payment_date)
+    return d.getFullYear() === currentYear && d.getMonth() === currentMonth
+  })
+
+  const isFiltered = Boolean(search || method !== 'all' || dateFrom || dateTo)
+  const dateLabel = isFiltered ? 'Filtered' : 'This month'
+
   const stats = {
-    total_received: filtered.reduce((sum, p) => sum + Number(p.amount || 0), 0),
+    total_received: isFiltered
+      ? filtered.reduce((sum, p) => sum + Number(p.amount || 0), 0)
+      : thisMonthPayments.reduce((sum, p) => sum + Number(p.amount || 0), 0),
     processing: filtered.filter(p => p.status === 'processing').reduce((sum, p) => sum + Number(p.amount || 0), 0),
-    count: filtered.length,
+    count: isFiltered
+      ? filtered.length
+      : thisMonthPayments.length,
   }
 
   const methods = ['all', ...new Set(payments.map(p => p.method || 'cash'))]
@@ -123,7 +139,7 @@ export default function PaymentsPage() {
             </div>
             <span style={{ fontSize: '20px' }}>$</span>
           </div>
-          <div style={{ fontSize: '12px', color: '#6b7280' }}>This month</div>
+          <div style={{ fontSize: '12px', color: '#6b7280' }}>{dateLabel}</div>
         </div>
 
         <div className="card">
@@ -145,7 +161,7 @@ export default function PaymentsPage() {
             </div>
             <span style={{ fontSize: '20px' }}>$</span>
           </div>
-          <div style={{ fontSize: '12px', color: '#6b7280' }}>This month</div>
+          <div style={{ fontSize: '12px', color: '#6b7280' }}>{dateLabel}</div>
         </div>
 
         <div className="card" style={{ gridColumn: '4', display: 'flex', flexDirection: 'column', gap: '12px' }}>
