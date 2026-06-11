@@ -9,7 +9,9 @@ function getDb(): Sql {
     if (!process.env.DATABASE_URL) {
       throw new Error('DATABASE_URL environment variable is not set')
     }
-    _sql = neon(process.env.DATABASE_URL)
+    // Clean database URL to remove BOM (Zero-Width No-Break Space) or whitespace
+    const dbUrl = process.env.DATABASE_URL.trim().replace(/^\uFEFF/, '')
+    _sql = neon(dbUrl)
   }
   return _sql
 }
