@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { initDB, sql } from '@/lib/db'
 import { requireAuth, isAuthError } from '@/lib/auth-server'
+import { sendInvoiceSentEmail } from '@/lib/email'
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   await initDB()
@@ -74,7 +75,30 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     }
   }
 
-  return Response.json(rows[0])
+  const invoice = rows[0]
+
+  if (status === 'sent') {
+    try {
+      const userId = Number(auth.sub)
+      const userRows = await sql`SELECT name, email, company_name, company_email, email_sent FROM users WHERE id = ${userId}`
+      const clientRows = await sql`SELECT name, email, company FROM clients WHERE id = ${Number(invoice.client_id)}`
+      
+      if (userRows.length > 0 && clientRows.length > 0) {
+        const user = userRows[0]
+        const client = clientRows[0]
+        
+        if (user.email_sent && client.email) {
+          sendInvoiceSentEmail(invoice, client, user).catch(err => {
+            console.error('Failed to send invoice email in background:', err)
+          })
+        }
+      }
+    } catch (emailErr) {
+      console.error('Error triggering invoice email:', emailErr)
+    }
+  }
+
+  return Response.json(invoice)
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {

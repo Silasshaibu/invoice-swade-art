@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { initDB, sql, nextInvoiceNumber } from '@/lib/db'
 import { requireAuth, isAuthError } from '@/lib/auth-server'
+import { sendInvoiceSentEmail } from '@/lib/email'
 
 export async function GET(req: NextRequest) {
   await initDB()
@@ -91,6 +92,27 @@ export async function POST(req: NextRequest) {
       INSERT INTO invoice_items (invoice_id, description, quantity, unit_price, amount)
       VALUES (${invoice.id}, ${item.description}, ${Number(item.quantity)}, ${Number(item.unit_price)}, ${item.amount})
     `
+  }
+
+  // Send email notification if status is 'sent'
+  if (status === 'sent') {
+    try {
+      const userRows = await sql`SELECT name, email, company_name, company_email, email_sent FROM users WHERE id = ${userId}`
+      const clientRows = await sql`SELECT name, email, company FROM clients WHERE id = ${Number(client_id)}`
+      
+      if (userRows.length > 0 && clientRows.length > 0) {
+        const user = userRows[0]
+        const client = clientRows[0]
+        
+        if (user.email_sent && client.email) {
+          sendInvoiceSentEmail(invoice, client, user).catch(err => {
+            console.error('Failed to send invoice email in background:', err)
+          })
+        }
+      }
+    } catch (emailErr) {
+      console.error('Error triggering invoice email:', emailErr)
+    }
   }
 
   return Response.json(invoice, { status: 201 })

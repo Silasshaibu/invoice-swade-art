@@ -61,6 +61,8 @@ export async function initDB() {
     sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS email_sent        BOOLEAN DEFAULT TRUE`,
     sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS email_received    BOOLEAN DEFAULT TRUE`,
     sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS email_overdue     BOOLEAN DEFAULT TRUE`,
+    sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_token       TEXT`,
+    sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_token_expires TIMESTAMPTZ`,
   ])
 
   await sql`

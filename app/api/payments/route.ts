@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { initDB, sql } from '@/lib/db'
 import { requireAuth, isAuthError } from '@/lib/auth-server'
 import { createPaymentSchema } from '@/lib/validation'
+import { sendPaymentReceivedEmail } from '@/lib/email'
 
 export async function GET(req: NextRequest) {
   await initDB()
@@ -39,7 +40,34 @@ export async function POST(req: NextRequest) {
       RETURNING *
     `
 
-    return Response.json(result[0], { status: 201 })
+    const payment = result[0]
+
+    // Send email confirmation in background if enabled
+    try {
+      const userId = Number(auth.sub)
+      const userRows = await sql`SELECT name, email, company_name, company_email, email_received FROM users WHERE id = ${userId}`
+      const invRows = await sql`SELECT invoice_number, total, currency, client_id FROM invoices WHERE id = ${Number(invoice_id)}`
+      
+      if (userRows.length > 0 && invRows.length > 0) {
+        const user = userRows[0]
+        const invoice = invRows[0]
+        
+        const clientRows = await sql`SELECT name, email FROM clients WHERE id = ${Number(invoice.client_id)}`
+        if (clientRows.length > 0) {
+          const client = clientRows[0]
+          
+          if (user.email_received && client.email) {
+            sendPaymentReceivedEmail(payment, invoice, client, user).catch(err => {
+              console.error('Failed to send payment receipt in background:', err)
+            })
+          }
+        }
+      }
+    } catch (emailErr) {
+      console.error('Error triggering payment receipt email:', emailErr)
+    }
+
+    return Response.json(payment, { status: 201 })
   } catch (error: unknown) {
     if (error instanceof Error && 'errors' in error) {
       return Response.json({ error: 'Invalid input', details: error }, { status: 400 })
