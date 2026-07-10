@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { api } from '../lib/api'
+import { api, API_BASE } from '../lib/api'
 import type { Page } from '../App'
 
 interface InvData {
@@ -32,9 +32,8 @@ export default function InvoiceDetailPage({ id, nav }: { id: number; nav: (p: Pa
   }
 
   const printPDF = async () => {
-    const API = import.meta.env.VITE_API_URL || 'https://invoice.swade-art.com'
     const token = localStorage.getItem('inv_token')
-    const url = `${API}/api/invoices/${id}/pdf`
+    const url = `${API_BASE}/api/invoices/${id}/pdf`
     // Open in external browser for printing
     if (window.electronAPI) {
       // In electron, open in default browser

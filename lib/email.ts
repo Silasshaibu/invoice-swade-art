@@ -1,3 +1,5 @@
+import { getAppUrl } from './url'
+
 export interface EmailPayload {
   to: string
   subject: string
@@ -172,8 +174,8 @@ function emailTemplateWrapper(content: string): string {
   `
 }
 
-export async function sendPasswordResetEmail(email: string, token: string, origin: string): Promise<boolean> {
-  const resetLink = `${origin}/reset-password?token=${token}`
+export async function sendPasswordResetEmail(email: string, token: string): Promise<boolean> {
+  const resetLink = `${getAppUrl()}/reset-password?token=${token}`
   const html = emailTemplateWrapper(`
     <h2 style="font-size: 20px; font-weight: 700; margin-top: 0; margin-bottom: 16px;">Password Reset Request</h2>
     <p>We received a request to reset the password for your account. Click the button below to choose a new password. This link will expire in 1 hour.</p>
@@ -200,7 +202,7 @@ export async function sendPasswordResetEmail(email: string, token: string, origi
 }
 
 export async function sendInvoiceSentEmail(invoice: any, client: any, user: any): Promise<boolean> {
-  const invoiceLink = `${process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://invoice.swade-art.com'}/api/invoices/${invoice.id}/pdf`
+  const invoiceLink = `${getAppUrl()}/api/invoices/${invoice.id}/pdf`
   const currencySymbol = invoice.currency === 'USD' ? '$' : invoice.currency + ' '
   const formattedTotal = `${currencySymbol}${Number(invoice.total).toFixed(2)}`
 

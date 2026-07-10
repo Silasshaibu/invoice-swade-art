@@ -1,5 +1,5 @@
 // All API calls go to the hosted Vercel deployment — this is how web and desktop stay in sync.
-const API_BASE = import.meta.env.VITE_API_URL || 'https://invoice.swade-art.com'
+export const API_BASE = import.meta.env.VITE_API_URL || 'https://invoice.swade-art.com'
 
 const TOKEN_KEY = 'inv_token'
 const USER_KEY  = 'inv_user'

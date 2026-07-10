@@ -36,10 +36,8 @@ export async function POST(req: NextRequest) {
       WHERE id = ${user.id}
     `
 
-    const origin = req.headers.get('origin') || 'https://invoice.swade-art.com'
-    
     // Send email using Resend
-    const sent = await sendPasswordResetEmail(normalizedEmail, token, origin)
+    const sent = await sendPasswordResetEmail(normalizedEmail, token)
     
     if (!sent) {
       return Response.json({ error: 'Failed to send password reset email. Please try again later.' }, { status: 500 })

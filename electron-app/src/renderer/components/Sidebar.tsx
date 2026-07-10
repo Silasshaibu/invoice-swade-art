@@ -1,4 +1,4 @@
-import { clearAuth, getUser } from '../lib/api'
+import { clearAuth, getUser, API_BASE } from '../lib/api'
 import type { Page } from '../App'
 
 const NAV: { key: Page['name']; label: string; icon: string }[] = [
@@ -21,7 +21,7 @@ export default function Sidebar({ currentPage, nav, onLogout }: Props) {
   const logout = async () => {
     try {
       const token = localStorage.getItem('inv_token')
-      await fetch(`${import.meta.env.VITE_API_URL || 'https://invoice.swade-art.com'}/api/auth/logout`, {
+      await fetch(`${API_BASE}/api/auth/logout`, {
         method: 'POST', headers: { Authorization: `Bearer ${token}` }
       })
     } catch {}

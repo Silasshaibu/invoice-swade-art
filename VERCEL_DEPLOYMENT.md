@@ -29,6 +29,10 @@ Before deploying, add these environment variables in Vercel:
   - Use: `openssl rand -base64 32` or any random generator
   - Example: `abcd1234efgh5678ijkl9012mnop3456qrst7890uv/w==`
 
+- `NEXT_PUBLIC_APP_URL` = `https://invoice.swade-art.com`
+  - Must be scoped to the "Production" environment in Vercel
+  - Prevents invoice-email and password-reset links from leaking a `*.vercel.app` URL
+
 **Optional (for first run only):**
 - `SEED_ADMIN_PASSWORD` = Temporary password for admin account
   - Only set this on first deployment
@@ -38,7 +42,7 @@ Before deploying, add these environment variables in Vercel:
 ### Step 4: Deploy
 1. Click "Deploy"
 2. Wait 1-3 minutes for build to complete
-3. ✅ Your app is live at: `https://invoice-swade-art.vercel.app`
+3. ✅ Your app is live at the auto-generated Vercel URL shown in your dashboard (e.g. `https://invoiceswade-artcom.vercel.app` — check Vercel → your project → Deployments for the exact alias, it can change if the project is renamed)
 
 ### Step 5: Connect Custom Domain
 1. In Vercel dashboard → Settings → Domains
@@ -78,7 +82,7 @@ Before deploying, add these environment variables in Vercel:
 
 ### Test the Application
 1. Visit: https://invoice.swade-art.com (after DNS propagates)
-2. Or: https://invoice-swade-art.vercel.app (immediately)
+2. Or: the auto-generated Vercel URL shown in your dashboard (immediately)
 3. Login with:
    - Email: `admin@invoice.swade-art.com`
    - Password: (the SEED_ADMIN_PASSWORD you set)
@@ -105,6 +109,9 @@ DATABASE_URL=postgresql://user:password@host/database
 
 # JWT Secret (Required)
 JWT_SECRET=generate-random-string-here
+
+# Public App URL (Required)
+NEXT_PUBLIC_APP_URL=https://invoice.swade-art.com
 
 # Admin Seeding (Optional - only on first run)
 SEED_ADMIN_PASSWORD=temporary-admin-password
