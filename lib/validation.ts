@@ -11,6 +11,11 @@ export const registerSchema = z.object({
   name: z.string().min(1, 'Name is required'),
 })
 
+export const accessRequestSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  name: z.string().min(1, 'Name is required'),
+})
+
 export const createClientSchema = z.object({
   name: z.string().min(1, 'Client name is required'),
   email: z.string().email('Invalid email').optional().or(z.literal('')),

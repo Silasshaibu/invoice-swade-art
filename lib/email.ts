@@ -201,6 +201,43 @@ export async function sendPasswordResetEmail(email: string, token: string): Prom
   })
 }
 
+export async function sendAccessRequestEmail(requesterName: string, requesterEmail: string, token: string): Promise<boolean> {
+  const reviewLink = `${getAppUrl()}/admin/access-requests/review?token=${token}`
+  const superAdminEmail = process.env.SUPER_ADMIN_EMAIL || 'silasshaibu30bg@gmail.com'
+  const html = emailTemplateWrapper(`
+    <h2 style="font-size: 20px; font-weight: 700; margin-top: 0; margin-bottom: 16px;">New Access Request</h2>
+    <p>Someone has requested access to the Invoice Platform:</p>
+
+    <div class="card">
+      <div class="card-title">Name</div>
+      <div class="card-value">${requesterName}</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Email</div>
+      <div class="card-value">${requesterEmail}</div>
+    </div>
+
+    <div style="text-align: center;">
+      <a href="${reviewLink}" class="btn">Grant Access</a>
+    </div>
+
+    <p style="font-size: 13px; color: #6b7280; margin-top: 24px;">You can review and approve or reject this request. This link will expire in 7 days.</p>
+
+    <div class="divider"></div>
+
+    <p style="font-size: 12px; color: #9ca3af; word-break: break-all;">
+      If the button above doesn't work, copy and paste this URL into your browser:<br>
+      <a href="${reviewLink}" style="color: #4f46e5; text-decoration: underline;">${reviewLink}</a>
+    </p>
+  `)
+
+  return sendEmail({
+    to: superAdminEmail,
+    subject: 'New access request — Invoice Platform',
+    html
+  })
+}
+
 export async function sendInvoiceSentEmail(invoice: any, client: any, user: any): Promise<boolean> {
   const invoiceLink = `${getAppUrl()}/api/invoices/${invoice.id}/pdf`
   const currencySymbol = invoice.currency === 'USD' ? '$' : invoice.currency + ' '

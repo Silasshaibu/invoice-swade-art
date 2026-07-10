@@ -33,6 +33,10 @@ Before deploying, add these environment variables in Vercel:
   - Must be scoped to the "Production" environment in Vercel
   - Prevents invoice-email and password-reset links from leaking a `*.vercel.app` URL
 
+- `SUPER_ADMIN_EMAIL` = `silasshaibu30bg@gmail.com`
+  - Registration is invite-only; this address receives "new access request" emails with a Grant Access link
+  - Requests can also be approved from the in-app admin dashboard (`/admin/users`) if this email doesn't arrive
+
 **Optional (for first run only):**
 - `SEED_ADMIN_PASSWORD` = Temporary password for admin account
   - Only set this on first deployment
@@ -112,6 +116,9 @@ JWT_SECRET=generate-random-string-here
 
 # Public App URL (Required)
 NEXT_PUBLIC_APP_URL=https://invoice.swade-art.com
+
+# Super Admin Email (Required) - receives access request approvals
+SUPER_ADMIN_EMAIL=silasshaibu30bg@gmail.com
 
 # Admin Seeding (Optional - only on first run)
 SEED_ADMIN_PASSWORD=temporary-admin-password

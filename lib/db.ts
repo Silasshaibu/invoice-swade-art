@@ -147,6 +147,19 @@ export async function initDB() {
     )
   `
 
+  await sql`
+    CREATE TABLE IF NOT EXISTS access_requests (
+      id            SERIAL PRIMARY KEY,
+      name          TEXT NOT NULL,
+      email         TEXT NOT NULL,
+      status        TEXT NOT NULL DEFAULT 'pending',
+      token         TEXT NOT NULL,
+      token_expires TIMESTAMPTZ NOT NULL,
+      requested_at  TIMESTAMPTZ DEFAULT NOW(),
+      decided_at    TIMESTAMPTZ
+    )
+  `
+
   // Create all indexes in parallel
   await Promise.all([
     sql`CREATE INDEX IF NOT EXISTS idx_invoices_user   ON invoices(user_id)`,
@@ -156,6 +169,8 @@ export async function initDB() {
     sql`CREATE INDEX IF NOT EXISTS idx_payments_invoice ON payments(invoice_id)`,
     sql`CREATE INDEX IF NOT EXISTS idx_audit_user ON audit_logs(user_id)`,
     sql`CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_logs(created_at)`,
+    sql`CREATE INDEX IF NOT EXISTS idx_access_requests_email ON access_requests(email)`,
+    sql`CREATE INDEX IF NOT EXISTS idx_access_requests_token ON access_requests(token)`,
   ])
 
   // Seed default admin (only if SEED_ADMIN_PASSWORD env var is set)

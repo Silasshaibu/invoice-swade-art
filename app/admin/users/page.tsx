@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import AppShell from '@/components/AppShell'
 import { apiFetch, getUser } from '@/lib/auth'
 import type { AuthUser } from '@/types'
-import { Shield, Trash2, UserPlus, UserCheck, AlertTriangle } from 'lucide-react'
+import { Shield, Trash2, UserPlus, UserCheck, AlertTriangle, Clock, X } from 'lucide-react'
 
 interface AdminUserRow {
   id: number
@@ -16,6 +16,14 @@ interface AdminUserRow {
   invoice_count: number
 }
 
+interface AccessRequestRow {
+  id: number
+  name: string
+  email: string
+  status: string
+  requested_at: string
+}
+
 export default function AdminUsersPage() {
   const router = useRouter()
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null)
@@ -25,6 +33,8 @@ export default function AdminUsersPage() {
   const [error, setError] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState<number | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null)
+  const [accessRequests, setAccessRequests] = useState<AccessRequestRow[]>([])
+  const [arActionLoading, setArActionLoading] = useState<number | null>(null)
 
   const load = async () => {
     try {
@@ -46,6 +56,15 @@ export default function AdminUsersPage() {
     }
   }
 
+  const loadAccessRequests = async () => {
+    try {
+      const res = await apiFetch('/api/admin/access-requests')
+      if (!res.ok) return
+      const data = await res.json()
+      setAccessRequests(Array.isArray(data) ? data : [])
+    } catch {}
+  }
+
   useEffect(() => {
     const loggedUser = getUser()
     setCurrentUser(loggedUser)
@@ -54,7 +73,28 @@ export default function AdminUsersPage() {
       return
     }
     load()
+    loadAccessRequests()
   }, [router])
+
+  const decideAccessRequest = async (id: number, decision: 'approved' | 'rejected') => {
+    setError(null)
+    setArActionLoading(id)
+    try {
+      const res = await apiFetch('/api/admin/access-requests', {
+        method: 'PUT',
+        body: JSON.stringify({ id, decision })
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Failed to update request')
+      }
+      await loadAccessRequests()
+    } catch (err: any) {
+      setError(err.message || 'Error updating access request')
+    } finally {
+      setArActionLoading(null)
+    }
+  }
 
   const toggleAdmin = async (userId: number, currentIsAdmin: boolean) => {
     if (userId === currentUser?.id) return
@@ -131,6 +171,62 @@ export default function AdminUsersPage() {
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center', color: '#ef4444', background: '#fef2f2', padding: '12px 16px', borderRadius: '8px', marginBottom: '20px', fontSize: '14px' }}>
             <AlertTriangle size={18} />
             <span>{error}</span>
+          </div>
+        )}
+
+        {/* Pending Access Requests */}
+        {accessRequests.length > 0 && (
+          <div className="card" style={{ padding: 0, marginBottom: '28px' }}>
+            <div style={{ padding: '18px 24px', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Clock size={16} color="#f59e0b" />
+              <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#111827', margin: 0 }}>Pending Access Requests ({accessRequests.length})</h3>
+            </div>
+            <div className="table-scroll">
+              <table style={{ width: '100%' }}>
+                <thead>
+                  <tr>
+                    <th>Requester</th>
+                    <th>Requested</th>
+                    <th style={{ textAlign: 'right' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {accessRequests.map(r => (
+                    <tr key={r.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                      <td>
+                        <div style={{ fontWeight: 600, color: '#111827', fontSize: '14px' }}>{r.name}</div>
+                        <div style={{ color: '#6b7280', fontSize: '12px', marginTop: '2px' }}>{r.email}</div>
+                      </td>
+                      <td style={{ fontSize: '13px', color: '#6b7280' }}>
+                        {new Date(r.requested_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+                      </td>
+                      <td>
+                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', alignItems: 'center' }}>
+                          <button
+                            onClick={() => decideAccessRequest(r.id, 'approved')}
+                            className="btn btn-ghost"
+                            disabled={arActionLoading === r.id}
+                            style={{ padding: '6px 10px', fontSize: '12px', color: '#4f46e5', display: 'flex', alignItems: 'center', gap: '4px' }}
+                          >
+                            <UserCheck size={14} />
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => decideAccessRequest(r.id, 'rejected')}
+                            className="btn btn-ghost"
+                            disabled={arActionLoading === r.id}
+                            style={{ padding: '6px 10px', fontSize: '12px', color: '#dc2626', display: 'flex', alignItems: 'center', gap: '4px' }}
+                          >
+                            <X size={14} />
+                            Reject
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 

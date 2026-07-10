@@ -1,8 +1,10 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { setAuth } from '@/lib/auth'
 import { Spinner } from '@/components/Spinner'
+
+type RequestStatus = 'unknown' | 'none' | 'pending' | 'approved' | 'rejected'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -11,6 +13,31 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
+  const [requestStatus, setRequestStatus] = useState<RequestStatus>('unknown')
+
+  const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+
+  const checkRequestStatus = async (email: string) => {
+    try {
+      const res = await fetch(`/api/auth/access-requests?email=${encodeURIComponent(email)}`)
+      const data = await res.json()
+      if (res.ok && data.status) setRequestStatus(data.status)
+    } catch {}
+  }
+
+  // Debounced status check whenever the register-tab email changes
+  useEffect(() => {
+    if (tab !== 'register' || !isValidEmail(form.email)) return
+    const timer = setTimeout(() => checkRequestStatus(form.email), 600)
+    return () => clearTimeout(timer)
+  }, [tab, form.email])
+
+  // Poll for approval while a request is pending
+  useEffect(() => {
+    if (tab !== 'register' || requestStatus !== 'pending' || !isValidEmail(form.email)) return
+    const interval = setInterval(() => checkRequestStatus(form.email), 6000)
+    return () => clearInterval(interval)
+  }, [tab, requestStatus, form.email])
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -42,11 +69,29 @@ export default function LoginPage() {
       return
     }
 
+    if (tab === 'register' && requestStatus !== 'approved') {
+      try {
+        const res = await fetch('/api/auth/access-requests', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: form.email, name: form.name }),
+        })
+        const data = await res.json()
+        setLoading(false)
+        if (!res.ok) { setError(data.error || 'Failed to submit access request.'); return }
+        setRequestStatus(data.status === 'approved' ? 'approved' : 'pending')
+      } catch (err) {
+        setLoading(false)
+        setError('An unexpected error occurred.')
+      }
+      return
+    }
+
     const url = tab === 'login' ? '/api/auth/login' : '/api/auth/register'
     const body = tab === 'login'
       ? { email: form.email, password: form.password }
       : { email: form.email, password: form.password, name: form.name }
-    
+
     try {
       const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       const data = await res.json()
@@ -58,6 +103,13 @@ export default function LoginPage() {
       setLoading(false)
       setError('An unexpected error occurred.')
     }
+  }
+
+  const registerButtonLabel = () => {
+    if (requestStatus === 'approved') return loading ? 'Creating account…' : 'Create Account'
+    if (requestStatus === 'pending') return 'Awaiting Approval…'
+    if (requestStatus === 'rejected') return loading ? 'Sending request…' : 'Request Again'
+    return loading ? 'Sending request…' : 'Request Access Code'
   }
 
   return (
@@ -105,10 +157,30 @@ export default function LoginPage() {
                   </div>
                   <input className="input" disabled={loading} type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} placeholder="••••••••" required minLength={6} style={{ opacity: loading ? 0.6 : 1, marginTop: '4px' }} />
                 </div>
+                {tab === 'register' && requestStatus === 'pending' && (
+                  <div style={{ background: '#eef2ff', color: '#4338ca', padding: '10px 14px', borderRadius: '6px', fontSize: '13px' }}>
+                    Request pending — we'll notify you once approved. You can also come back to this page later.
+                  </div>
+                )}
+                {tab === 'register' && requestStatus === 'rejected' && (
+                  <div style={{ background: '#fee2e2', color: '#dc2626', padding: '10px 14px', borderRadius: '6px', fontSize: '13px' }}>
+                    Your access request was declined. You can submit a new request.
+                  </div>
+                )}
+                {tab === 'register' && requestStatus === 'approved' && (
+                  <div style={{ background: '#dcfce7', color: '#15803d', padding: '10px 14px', borderRadius: '6px', fontSize: '13px' }}>
+                    Access approved! Complete your registration below.
+                  </div>
+                )}
                 {error && <div style={{ background: '#fee2e2', color: '#dc2626', padding: '10px 14px', borderRadius: '6px', fontSize: '13px' }}>{error}</div>}
-                <button className="btn btn-primary" type="submit" disabled={loading} style={{ justifyContent: 'center', padding: '12px', fontSize: '15px', fontWeight: 600, gap: '8px' }}>
+                <button
+                  className="btn btn-primary"
+                  type="submit"
+                  disabled={loading || (tab === 'register' && requestStatus === 'pending')}
+                  style={{ justifyContent: 'center', padding: '12px', fontSize: '15px', fontWeight: 600, gap: '8px' }}
+                >
                   {loading && <Spinner size="sm" color="white" />}
-                  {loading ? 'Signing in…' : tab === 'login' ? 'Sign In' : 'Create Account'}
+                  {tab === 'login' ? (loading ? 'Signing in…' : 'Sign In') : registerButtonLabel()}
                 </button>
               </form>
             </>
