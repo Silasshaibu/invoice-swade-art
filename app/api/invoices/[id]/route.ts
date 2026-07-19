@@ -29,20 +29,23 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   const body = await req.json()
   const { client_id, invoice_number, status, issue_date, due_date, notes, tax_rate, discount, currency, items } = body
 
-  // Recompute totals if items provided
-  let subtotal = 0
+  const existing = await sql`SELECT subtotal, tax_rate, discount FROM invoices WHERE id = ${Number(id)} AND user_id = ${Number(auth.sub)}`
+  if (existing.length === 0) return Response.json({ error: 'Not found' }, { status: 404 })
+
+  // Recompute totals if items provided, otherwise keep the existing subtotal
+  let subtotal = Number(existing[0].subtotal)
   if (items) {
+    subtotal = 0
     for (const item of items) {
       subtotal += Number(item.quantity) * Number(item.unit_price)
     }
-  } else {
-    const existing = await sql`SELECT subtotal FROM invoices WHERE id = ${Number(id)} AND user_id = ${Number(auth.sub)}`
-    if (existing.length === 0) return Response.json({ error: 'Not found' }, { status: 404 })
-    subtotal = Number(existing[0].subtotal)
   }
 
-  const discountAmt = discount !== undefined ? Number(discount) : undefined
-  const taxRateVal = tax_rate !== undefined ? Number(tax_rate) : undefined
+  const discountAmt = discount !== undefined ? Number(discount) : Number(existing[0].discount)
+  const taxRateVal = tax_rate !== undefined ? Number(tax_rate) : Number(existing[0].tax_rate)
+  const taxableAmount = subtotal - discountAmt
+  const taxAmount = taxableAmount * (taxRateVal / 100)
+  const total = taxableAmount + taxAmount
 
   const rows = await sql`
     UPDATE invoices SET
@@ -52,11 +55,11 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       issue_date = COALESCE(${issue_date}, issue_date),
       due_date = COALESCE(${due_date}, due_date),
       notes = COALESCE(${notes}, notes),
-      tax_rate = COALESCE(${taxRateVal ?? null}, tax_rate),
-      discount = COALESCE(${discountAmt ?? null}, discount),
+      tax_rate = ${taxRateVal},
+      discount = ${discountAmt},
       subtotal = ${subtotal},
-      tax_amount = ${subtotal * ((taxRateVal ?? 0) / 100)},
-      total = ${(subtotal - (discountAmt ?? 0)) + (subtotal - (discountAmt ?? 0)) * ((taxRateVal ?? 0) / 100)},
+      tax_amount = ${taxAmount},
+      total = ${total},
       currency = COALESCE(${currency}, currency),
       updated_at = NOW()
     WHERE id = ${Number(id)} AND user_id = ${Number(auth.sub)}
