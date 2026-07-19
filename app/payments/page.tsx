@@ -103,15 +103,17 @@ export default function PaymentsPage() {
     const win = window.open('', '_blank')
     if (!win) { alert('Please allow pop-ups to export as PDF.'); return }
 
+    const esc = (v: unknown) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string))
+
     const rows = filtered.map(p => `
       <tr>
         <td>PAY-${String(p.id).padStart(3, '0')}</td>
-        <td>${p.invoice_number || ''}</td>
-        <td>${p.client_name || ''}</td>
+        <td>${esc(p.invoice_number || '')}</td>
+        <td>${esc(p.client_name || '')}</td>
         <td class="num">${fmt(Number(p.amount))}</td>
-        <td>${PAYMENT_METHODS[p.method || 'cash'] || p.method || ''}</td>
+        <td>${esc(PAYMENT_METHODS[p.method || 'cash'] || p.method || '')}</td>
         <td>${new Date(p.payment_date).toISOString().split('T')[0]}</td>
-        <td>${p.status || 'completed'}</td>
+        <td>${esc(p.status || 'completed')}</td>
       </tr>`).join('')
 
     const total = filtered.reduce((sum, p) => sum + Number(p.amount || 0), 0)
@@ -120,6 +122,7 @@ export default function PaymentsPage() {
 <html>
 <head>
 <meta charset="utf-8"/>
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'"/>
 <title>Payments — ${new Date().toISOString().split('T')[0]}</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }

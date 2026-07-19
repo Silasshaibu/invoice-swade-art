@@ -27,6 +27,15 @@ export async function PUT(req: NextRequest) {
     pdf_template, email_sent, email_received, email_overdue
   } = body
 
+  if (company_logo != null && company_logo !== '') {
+    if (typeof company_logo !== 'string' || !company_logo.startsWith('data:image/')) {
+      return Response.json({ error: 'company_logo must be an image data URI' }, { status: 400 })
+    }
+    if (company_logo.length > 3_000_000) {
+      return Response.json({ error: 'Logo image is too large' }, { status: 400 })
+    }
+  }
+
   const rows = await sql`
     UPDATE users SET
       name = COALESCE(${name}, name),

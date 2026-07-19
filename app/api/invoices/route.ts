@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { initDB, sql, nextInvoiceNumber } from '@/lib/db'
 import { requireAuth, isAuthError } from '@/lib/auth-server'
 import { sendInvoiceSentEmail } from '@/lib/email'
+import { createInvoiceSchema } from '@/lib/validation'
 
 export async function GET(req: NextRequest) {
   await initDB()
@@ -56,12 +57,13 @@ export async function POST(req: NextRequest) {
   if (isAuthError(auth)) return auth
   const userId = Number(auth.sub)
   const body = await req.json()
+
+  const parsed = createInvoiceSchema.safeParse(body)
+  if (!parsed.success) return Response.json({ error: 'Invalid input', details: parsed.error.issues }, { status: 400 })
   const {
     client_id, invoice_number, status = 'draft', issue_date, due_date,
-    notes, tax_rate = 0, discount = 0, currency = 'USD', items = [],
-  } = body
-
-  if (!client_id) return Response.json({ error: 'client_id is required' }, { status: 400 })
+    notes, tax_rate = 0, discount = 0, currency = 'USD', items,
+  } = parsed.data
 
   const invNum = invoice_number || await nextInvoiceNumber(userId)
 

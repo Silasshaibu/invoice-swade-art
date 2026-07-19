@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { initDB, sql } from '@/lib/db'
 import { requireAuth, isAuthError } from '@/lib/auth-server'
 import { sendInvoiceSentEmail } from '@/lib/email'
+import { updateInvoiceSchema } from '@/lib/validation'
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   await initDB()
@@ -27,7 +28,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   if (isAuthError(auth)) return auth
   const { id } = await params
   const body = await req.json()
-  const { client_id, invoice_number, status, issue_date, due_date, notes, tax_rate, discount, currency, items } = body
+
+  const parsed = updateInvoiceSchema.safeParse(body)
+  if (!parsed.success) return Response.json({ error: 'Invalid input', details: parsed.error.issues }, { status: 400 })
+  const { client_id, invoice_number, status, issue_date, due_date, notes, tax_rate, discount, currency, items } = parsed.data
 
   const existing = await sql`SELECT subtotal, tax_rate, discount FROM invoices WHERE id = ${Number(id)} AND user_id = ${Number(auth.sub)}`
   if (existing.length === 0) return Response.json({ error: 'Not found' }, { status: 404 })

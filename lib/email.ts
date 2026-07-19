@@ -1,5 +1,7 @@
 import { getAppUrl } from './url'
 
+const esc = (v: unknown) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string))
+
 export interface EmailPayload {
   to: string
   subject: string
@@ -210,11 +212,11 @@ export async function sendAccessRequestEmail(requesterName: string, requesterEma
 
     <div class="card">
       <div class="card-title">Name</div>
-      <div class="card-value">${requesterName}</div>
+      <div class="card-value">${esc(requesterName)}</div>
     </div>
     <div class="card">
       <div class="card-title">Email</div>
-      <div class="card-value">${requesterEmail}</div>
+      <div class="card-value">${esc(requesterEmail)}</div>
     </div>
 
     <div style="text-align: center;">
@@ -245,32 +247,32 @@ export async function sendInvoiceSentEmail(invoice: any, client: any, user: any)
 
   const html = emailTemplateWrapper(`
     <h2 style="font-size: 20px; font-weight: 700; margin-top: 0; margin-bottom: 16px;">New Invoice Received</h2>
-    <p>Hi ${client.name},</p>
-    <p>You have received a new invoice from <strong>${user.company_name || user.name || 'our organization'}</strong>.</p>
-    
+    <p>Hi ${esc(client.name)},</p>
+    <p>You have received a new invoice from <strong>${esc(user.company_name || user.name || 'our organization')}</strong>.</p>
+
     <div class="card">
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
         <div>
           <div class="card-title">Invoice Number</div>
-          <div style="font-weight: 600;">${invoice.invoice_number}</div>
+          <div style="font-weight: 600;">${esc(invoice.invoice_number)}</div>
         </div>
         <div>
           <div class="card-title">Due Date</div>
-          <div style="font-weight: 600;">${invoice.due_date || 'On Receipt'}</div>
+          <div style="font-weight: 600;">${esc(invoice.due_date || 'On Receipt')}</div>
         </div>
       </div>
       <div class="divider" style="margin: 12px 0;"></div>
       <div>
         <div class="card-title">Amount Due</div>
-        <div class="card-value">${formattedTotal}</div>
+        <div class="card-value">${esc(formattedTotal)}</div>
       </div>
     </div>
-    
+
     <div style="text-align: center; margin-top: 24px;">
       <a href="${invoiceLink}" class="btn" target="_blank">View / Print Invoice</a>
     </div>
 
-    <p style="font-size: 14px; color: #4b5563; margin-top: 24px;">If you have any questions, please contact us at <a href="mailto:${user.company_email || user.email}" style="color: #4f46e5;">${user.company_email || user.email}</a>.</p>
+    <p style="font-size: 14px; color: #4b5563; margin-top: 24px;">If you have any questions, please contact us at <a href="mailto:${esc(user.company_email || user.email)}" style="color: #4f46e5;">${esc(user.company_email || user.email)}</a>.</p>
   `)
 
   return sendEmail({
@@ -286,34 +288,34 @@ export async function sendPaymentReceivedEmail(payment: any, invoice: any, clien
 
   const html = emailTemplateWrapper(`
     <h2 style="font-size: 20px; font-weight: 700; margin-top: 0; margin-bottom: 16px;">Payment Confirmation</h2>
-    <p>Hi ${client.name},</p>
-    <p>Thank you for your payment. We have successfully processed your payment for invoice <strong>${invoice.invoice_number}</strong>.</p>
-    
+    <p>Hi ${esc(client.name)},</p>
+    <p>Thank you for your payment. We have successfully processed your payment for invoice <strong>${esc(invoice.invoice_number)}</strong>.</p>
+
     <div class="card">
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
         <div>
           <div class="card-title">Payment Date</div>
-          <div style="font-weight: 600;">${payment.payment_date}</div>
+          <div style="font-weight: 600;">${esc(payment.payment_date)}</div>
         </div>
         <div>
           <div class="card-title">Payment Method</div>
-          <div style="font-weight: 600; text-transform: capitalize;">${(payment.method || '').replace('_', ' ')}</div>
+          <div style="font-weight: 600; text-transform: capitalize;">${esc((payment.method || '').replace('_', ' '))}</div>
         </div>
       </div>
       ${payment.reference ? `
         <div style="margin-top: 12px;">
           <div class="card-title">Reference</div>
-          <div style="font-weight: 600;">${payment.reference}</div>
+          <div style="font-weight: 600;">${esc(payment.reference)}</div>
         </div>
       ` : ''}
       <div class="divider" style="margin: 12px 0;"></div>
       <div>
         <div class="card-title">Amount Paid</div>
-        <div class="card-value" style="color: #22c55e;">${formattedAmount}</div>
+        <div class="card-value" style="color: #22c55e;">${esc(formattedAmount)}</div>
       </div>
     </div>
-    
-    <p style="font-size: 14px; color: #4b5563; margin-top: 24px;">This email serves as your receipt. If you have any questions or concerns, please contact us at <a href="mailto:${user.company_email || user.email}" style="color: #4f46e5;">${user.company_email || user.email}</a>.</p>
+
+    <p style="font-size: 14px; color: #4b5563; margin-top: 24px;">This email serves as your receipt. If you have any questions or concerns, please contact us at <a href="mailto:${esc(user.company_email || user.email)}" style="color: #4f46e5;">${esc(user.company_email || user.email)}</a>.</p>
   `)
 
   return sendEmail({

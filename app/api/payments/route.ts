@@ -34,6 +34,9 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const { invoice_id, amount, payment_date, method, reference, notes } = createPaymentSchema.parse(body)
 
+    const owned = await sql`SELECT id FROM invoices WHERE id = ${invoice_id} AND user_id = ${Number(auth.sub)}`
+    if (owned.length === 0) return Response.json({ error: 'Invoice not found' }, { status: 404 })
+
     const result = await sql`
       INSERT INTO payments (invoice_id, user_id, amount, payment_date, method, reference, notes)
       VALUES (${invoice_id}, ${Number(auth.sub)}, ${amount}, ${payment_date}, ${method || 'bank'}, ${reference || ''}, ${notes || ''})

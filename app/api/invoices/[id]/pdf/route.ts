@@ -24,10 +24,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const currency = inv.currency || user.currency || 'USD'
   const fmt = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(n)
   const fmtDate = (d: unknown) => d ? new Date(d as string).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' }) : ''
+  const esc = (v: unknown) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string))
+  const logoSrc = typeof user.company_logo === 'string' && user.company_logo.startsWith('data:image/') ? user.company_logo : ''
 
   const itemRows = (items as { description: string; quantity: number; unit_price: number; amount: number }[]).map((item) => `
     <tr>
-      <td>${item.description}</td>
+      <td>${esc(item.description)}</td>
       <td class="num">${item.quantity}</td>
       <td class="num">${fmt(Number(item.unit_price))}</td>
       <td class="num">${fmt(Number(item.amount))}</td>
@@ -40,7 +42,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 <html>
 <head>
 <meta charset="utf-8"/>
-<title>Invoice ${inv.invoice_number}</title>
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data: https:; style-src 'unsafe-inline'"/>
+<title>Invoice ${esc(inv.invoice_number)}</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Segoe UI', Arial, sans-serif; color: #1e293b; background: white; padding: 40px; font-size: 14px; }
@@ -73,18 +76,18 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 <body>
 <div class="header">
   <div>
-    ${user.company_logo ? `<img class="logo" src="${user.company_logo}" alt="" />` : ''}
-    <div class="brand">${user.company_name || user.name}</div>
+    ${logoSrc ? `<img class="logo" src="${esc(logoSrc)}" alt="" />` : ''}
+    <div class="brand">${esc(user.company_name || user.name)}</div>
     <div class="company-info">
-      ${user.company_address ? user.company_address + '<br/>' : ''}
-      ${user.company_phone ? user.company_phone + '<br/>' : ''}
-      ${user.email}
+      ${user.company_address ? esc(user.company_address) + '<br/>' : ''}
+      ${user.company_phone ? esc(user.company_phone) + '<br/>' : ''}
+      ${esc(user.email)}
     </div>
   </div>
   <div class="inv-meta">
     <div class="inv-number">INVOICE</div>
-    <div style="font-size:16px;font-weight:600;color:#4f46e5;margin-top:4px;">${inv.invoice_number}</div>
-    <div class="status-badge">${inv.status.toUpperCase()}</div>
+    <div style="font-size:16px;font-weight:600;color:#4f46e5;margin-top:4px;">${esc(inv.invoice_number)}</div>
+    <div class="status-badge">${esc(String(inv.status).toUpperCase())}</div>
     <div class="inv-dates">
       <div>Issue Date: ${fmtDate(inv.issue_date)}</div>
       ${inv.due_date ? `<div>Due Date: ${fmtDate(inv.due_date)}</div>` : ''}
@@ -95,11 +98,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 <div class="parties">
   <div class="party">
     <h3>Bill To</h3>
-    <p><strong>${inv.client_name}</strong><br/>
-    ${inv.client_company ? inv.client_company + '<br/>' : ''}
-    ${inv.client_email ? inv.client_email + '<br/>' : ''}
-    ${inv.client_phone ? inv.client_phone + '<br/>' : ''}
-    ${inv.client_address || ''}</p>
+    <p><strong>${esc(inv.client_name)}</strong><br/>
+    ${inv.client_company ? esc(inv.client_company) + '<br/>' : ''}
+    ${inv.client_email ? esc(inv.client_email) + '<br/>' : ''}
+    ${inv.client_phone ? esc(inv.client_phone) + '<br/>' : ''}
+    ${esc(inv.client_address || '')}</p>
   </div>
 </div>
 
@@ -119,7 +122,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   </table>
 </div>
 
-${inv.notes ? `<div class="notes"><h4>Notes</h4><p>${inv.notes}</p></div>` : ''}
+${inv.notes ? `<div class="notes"><h4>Notes</h4><p>${esc(inv.notes)}</p></div>` : ''}
 
 <div class="footer">Thank you for your business.</div>
 </body>

@@ -28,16 +28,22 @@ export const createClientSchema = z.object({
 
 export const createInvoiceSchema = z.object({
   client_id: z.number().int().positive('Valid client required'),
+  invoice_number: z.string().optional(),
+  status: z.enum(['draft', 'sent', 'paid', 'overdue', 'cancelled']).optional(),
+  issue_date: z.string().optional(),
   due_date: z.string().optional().nullable(),
   notes: z.string().optional().or(z.literal('')),
-  tax_rate: z.number().nonnegative().optional(),
+  tax_rate: z.number().nonnegative().max(100).optional(),
   discount: z.number().nonnegative().optional(),
+  currency: z.string().length(3).optional(),
   items: z.array(z.object({
     description: z.string().min(1, 'Description required'),
     quantity: z.number().positive('Quantity must be positive'),
     unit_price: z.number().nonnegative('Price cannot be negative'),
   })),
 })
+
+export const updateInvoiceSchema = createInvoiceSchema.partial()
 
 export const createPaymentSchema = z.object({
   invoice_id: z.number().int().positive('Valid invoice required'),
