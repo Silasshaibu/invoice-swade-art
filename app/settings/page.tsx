@@ -1,14 +1,18 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Building2, FileText, Bell, FileJson, Upload } from 'lucide-react'
 import AppShell from '@/components/AppShell'
 import { apiFetch } from '@/lib/auth'
+
+const MAX_LOGO_BYTES = 2 * 1024 * 1024
 
 export default function SettingsPage() {
   const [form, setForm] = useState({ name: '', company_name: '', company_address: '', company_phone: '', company_email: '', company_website: '', tax_id: '', currency: 'USD', email: '', logo: '' })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [logoError, setLogoError] = useState('')
+  const logoInputRef = useRef<HTMLInputElement>(null)
   const [invoicePrefix, setInvoicePrefix] = useState('INV')
   const [nextInvoiceNum, setNextInvoiceNum] = useState('007')
   const [paymentTerms, setPaymentTerms] = useState('14')
@@ -35,10 +39,29 @@ export default function SettingsPage() {
 
   const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => setForm(f => ({ ...f, [k]: e.target.value }))
 
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setLogoError('')
+    if (!file.type.startsWith('image/')) {
+      setLogoError('Please choose an image file.')
+      return
+    }
+    if (file.size > MAX_LOGO_BYTES) {
+      setLogoError('Image is too large — please choose one under 2MB.')
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = () => setForm(f => ({ ...f, logo: reader.result as string }))
+    reader.onerror = () => setLogoError('Could not read that file — please try again.')
+    reader.readAsDataURL(file)
+  }
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
-    await apiFetch('/api/auth/me', { method: 'PUT', body: JSON.stringify(form) })
+    await apiFetch('/api/auth/me', { method: 'PUT', body: JSON.stringify({ ...form, company_logo: form.logo }) })
     setSaving(false)
     setSaved(true)
     setTimeout(() => setSaved(false), 3000)
@@ -71,11 +94,13 @@ export default function SettingsPage() {
                 {form.logo ? <img src={form.logo} alt="Logo" style={{ maxWidth: '100%', maxHeight: '100%' }} /> : <Upload size={32} style={{ color: '#9ca3af' }} />}
               </div>
               <div>
-                <button className="btn btn-ghost" style={{ fontSize: '14px', gap: '6px', marginBottom: '8px' }}>
+                <input ref={logoInputRef} type="file" accept="image/*" onChange={handleLogoChange} style={{ display: 'none' }} />
+                <button type="button" className="btn btn-ghost" style={{ fontSize: '14px', gap: '6px', marginBottom: '8px' }} onClick={() => logoInputRef.current?.click()}>
                   <Upload size={16} />
                   Upload Logo
                 </button>
                 <p style={{ fontSize: '13px', color: '#6b7280' }}>Upload your company logo to appear on invoices and the login page. Recommended size: 200x200px.</p>
+                {logoError && <p style={{ fontSize: '13px', color: '#dc2626', marginTop: '4px' }}>{logoError}</p>}
               </div>
             </div>
           </div>

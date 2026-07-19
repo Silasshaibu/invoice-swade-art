@@ -22,7 +22,7 @@ export async function PUT(req: NextRequest) {
   if (isAuthError(auth)) return auth
   const body = await req.json()
   const {
-    name, company_name, company_address, company_phone, company_email, company_website,
+    name, company_name, company_address, company_phone, company_email, company_website, company_logo,
     currency, tax_id, invoice_prefix, next_invoice_num, payment_terms, invoice_notes,
     pdf_template, email_sent, email_received, email_overdue
   } = body
@@ -35,6 +35,7 @@ export async function PUT(req: NextRequest) {
       company_phone = COALESCE(${company_phone}, company_phone),
       company_email = COALESCE(${company_email}, company_email),
       company_website = COALESCE(${company_website}, company_website),
+      company_logo = COALESCE(${company_logo}, company_logo),
       currency = COALESCE(${currency}, currency),
       tax_id = COALESCE(${tax_id}, tax_id),
       invoice_prefix = COALESCE(${invoice_prefix}, invoice_prefix),
@@ -47,7 +48,7 @@ export async function PUT(req: NextRequest) {
       email_overdue = COALESCE(${email_overdue}, email_overdue)
     WHERE id = ${Number(auth.sub)}
     RETURNING id, email, name, company_name, company_address, company_phone, company_email, company_website,
-              currency, tax_id, invoice_prefix, next_invoice_num, payment_terms, invoice_notes,
+              company_logo, currency, tax_id, invoice_prefix, next_invoice_num, payment_terms, invoice_notes,
               pdf_template, email_sent, email_received, email_overdue, is_admin
   `
   return Response.json(rows[0])

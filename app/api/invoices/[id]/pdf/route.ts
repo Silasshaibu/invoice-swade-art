@@ -19,7 +19,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const inv = invRows[0]
   const items = await sql`SELECT * FROM invoice_items WHERE invoice_id = ${Number(id)} ORDER BY id`
-  const userRows = await sql`SELECT name, company_name, company_address, company_phone, email, currency FROM users WHERE id = ${userId}`
+  const userRows = await sql`SELECT name, company_name, company_address, company_phone, email, currency, company_logo FROM users WHERE id = ${userId}`
   const user = userRows[0]
   const currency = inv.currency || user.currency || 'USD'
   const fmt = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(n)
@@ -65,12 +65,14 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   .notes h4 { font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
   .notes p { font-size: 13px; color: #64748b; }
   .footer { margin-top: 48px; text-align: center; font-size: 12px; color: #94a3b8; }
+  .logo { max-height: 60px; max-width: 200px; margin-bottom: 8px; display: block; }
   @media print { body { padding: 20px; } }
 </style>
 </head>
 <body>
 <div class="header">
   <div>
+    ${user.company_logo ? `<img class="logo" src="${user.company_logo}" alt="" />` : ''}
     <div class="brand">${user.company_name || user.name}</div>
     <div class="company-info">
       ${user.company_address ? user.company_address + '<br/>' : ''}
