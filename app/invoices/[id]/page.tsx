@@ -36,7 +36,17 @@ export default function InvoiceDetailPage() {
     load()
   }
 
-  const printPDF = () => window.open(`/api/invoices/${id}/pdf`, '_blank')
+  const printPDF = async () => {
+    const win = window.open('', '_blank')
+    const res = await apiFetch(`/api/invoices/${id}/pdf`)
+    if (!res.ok || !win) {
+      win?.close()
+      alert('Failed to load invoice PDF.')
+      return
+    }
+    win.document.write(await res.text())
+    win.document.close()
+  }
 
   const addPayment = async (e: React.FormEvent) => {
     e.preventDefault()
