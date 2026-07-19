@@ -11,6 +11,7 @@ interface AdminUserRow {
   email: string
   name: string
   is_admin: boolean
+  is_super_admin: boolean
   created_at: string
   client_count: number
   invoice_count: number
@@ -139,6 +140,8 @@ export default function AdminUsersPage() {
       setActionLoading(null)
     }
   }
+
+  const isSuperAdmin = users.find(u => u.id === currentUser?.id)?.is_super_admin ?? false
 
   const filtered = users.filter(u =>
     u.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -312,7 +315,11 @@ export default function AdminUsersPage() {
 
                         {/* Admin Badge */}
                         <td>
-                          {u.is_admin ? (
+                          {u.is_super_admin ? (
+                            <span style={{ fontSize: '11px', fontWeight: 600, color: '#92400e', backgroundColor: '#fef3c7', padding: '4px 10px', borderRadius: '12px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                              <Shield size={10} /> Super Admin
+                            </span>
+                          ) : u.is_admin ? (
                             <span style={{ fontSize: '11px', fontWeight: 600, color: '#4f46e5', backgroundColor: '#e0e7ff', padding: '4px 10px', borderRadius: '12px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                               <Shield size={10} /> Admin
                             </span>
@@ -339,33 +346,33 @@ export default function AdminUsersPage() {
                         {/* Actions */}
                         <td>
                           <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', alignItems: 'center' }}>
-                            {/* Toggle role */}
+                            {/* Toggle role — super admin only */}
                             <button
                               onClick={() => toggleAdmin(u.id, u.is_admin)}
                               className="btn btn-ghost"
-                              disabled={isSelf || actionLoading === u.id}
+                              disabled={isSelf || u.is_super_admin || !isSuperAdmin || actionLoading === u.id}
                               style={{
                                 padding: '6px 10px', fontSize: '12px',
                                 color: u.is_admin ? '#ef4444' : '#4f46e5',
                                 display: 'flex', alignItems: 'center', gap: '4px'
                               }}
-                              title={isSelf ? 'You cannot change your own admin status' : u.is_admin ? 'Demote user to normal account' : 'Elevate user to administrator'}
+                              title={!isSuperAdmin ? 'Only the super admin can change roles' : isSelf ? 'You cannot change your own admin status' : u.is_super_admin ? 'Cannot change the super admin\'s status' : u.is_admin ? 'Demote user to normal account' : 'Elevate user to administrator'}
                             >
                               {u.is_admin ? <UserPlus size={14} /> : <UserCheck size={14} />}
                               {u.is_admin ? 'Demote' : 'Make Admin'}
                             </button>
 
-                            {/* Delete button */}
+                            {/* Delete button — super admin only */}
                             <button
                               onClick={() => setConfirmDeleteId(u.id)}
                               className="btn btn-ghost"
-                              disabled={isSelf || actionLoading === u.id}
+                              disabled={isSelf || u.is_super_admin || !isSuperAdmin || actionLoading === u.id}
                               style={{
                                 padding: '6px 10px', fontSize: '12px',
-                                color: isSelf ? '#9ca3af' : '#dc2626',
+                                color: isSelf || u.is_super_admin || !isSuperAdmin ? '#9ca3af' : '#dc2626',
                                 display: 'flex', alignItems: 'center', gap: '4px'
                               }}
-                              title={isSelf ? 'You cannot delete your own account' : 'Permantly delete user and all assets'}
+                              title={!isSuperAdmin ? 'Only the super admin can delete accounts' : isSelf ? 'You cannot delete your own account' : u.is_super_admin ? 'Cannot delete the super admin account' : 'Permanently delete user and all assets'}
                             >
                               <Trash2 size={14} />
                               Delete

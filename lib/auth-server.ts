@@ -71,3 +71,16 @@ export async function requireAdmin(req: NextRequest): Promise<JWTPayload | Respo
   }
   return auth
 }
+
+export async function requireSuperAdmin(req: NextRequest): Promise<JWTPayload | Response> {
+  const auth = await requireAuth(req)
+  if (isAuthError(auth)) return auth
+  const rows = await sql`SELECT is_super_admin FROM users WHERE id = ${Number(auth.sub)}`
+  if (rows.length === 0 || !rows[0].is_super_admin) {
+    return new Response(JSON.stringify({ error: 'Forbidden: Super admin access required' }), {
+      status: 403,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  }
+  return auth
+}

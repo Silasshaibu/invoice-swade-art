@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { initDB, sql } from '@/lib/db'
+import { initDB, sql, ensureInvoiceShareToken } from '@/lib/db'
 import { requireAuth, isAuthError } from '@/lib/auth-server'
 import { sendInvoiceSentEmail } from '@/lib/email'
 import { updateInvoiceSchema } from '@/lib/validation'
@@ -95,7 +95,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         const client = clientRows[0]
         
         if (user.email_sent && client.email) {
-          sendInvoiceSentEmail(invoice, client, user).catch(err => {
+          const shareToken = await ensureInvoiceShareToken(invoice.id)
+          sendInvoiceSentEmail(invoice, client, user, shareToken).catch(err => {
             console.error('Failed to send invoice email in background:', err)
           })
         }

@@ -240,8 +240,8 @@ export async function sendAccessRequestEmail(requesterName: string, requesterEma
   })
 }
 
-export async function sendInvoiceSentEmail(invoice: any, client: any, user: any): Promise<boolean> {
-  const invoiceLink = `${getAppUrl()}/api/invoices/${invoice.id}/pdf`
+export async function sendInvoiceSentEmail(invoice: any, client: any, user: any, shareToken: string): Promise<boolean> {
+  const invoiceLink = `${getAppUrl()}/api/invoices/share/${shareToken}`
   const currencySymbol = invoice.currency === 'USD' ? '$' : invoice.currency + ' '
   const formattedTotal = `${currencySymbol}${Number(invoice.total).toFixed(2)}`
 

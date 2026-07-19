@@ -1,11 +1,11 @@
 import { NextRequest } from 'next/server'
 import { initDB, sql } from '@/lib/db'
-import { requireAdmin, isAuthError } from '@/lib/auth-server'
+import { requireSuperAdmin, isAuthError } from '@/lib/auth-server'
 import { decideAccessRequestById } from '@/lib/access-requests'
 
 export async function GET(req: NextRequest) {
   await initDB()
-  const auth = await requireAdmin(req)
+  const auth = await requireSuperAdmin(req)
   if (isAuthError(auth)) return auth
 
   try {
@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   await initDB()
-  const auth = await requireAdmin(req)
+  const auth = await requireSuperAdmin(req)
   if (isAuthError(auth)) return auth
 
   try {

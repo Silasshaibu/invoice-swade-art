@@ -45,6 +45,7 @@ export async function initDB() {
   // Run all ALTER TABLE commands in parallel for faster initialization
   await Promise.all([
     sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS name              TEXT NOT NULL DEFAULT ''`,
+    sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS is_super_admin    BOOLEAN DEFAULT FALSE`,
     sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS company_name      TEXT DEFAULT ''`,
     sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS company_address   TEXT DEFAULT ''`,
     sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS company_phone     TEXT DEFAULT ''`,
@@ -101,6 +102,8 @@ export async function initDB() {
       updated_at     TIMESTAMPTZ DEFAULT NOW()
     )
   `
+  await sql`ALTER TABLE invoices ADD COLUMN IF NOT EXISTS share_token TEXT`
+  await sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_invoices_share_token ON invoices(share_token) WHERE share_token IS NOT NULL`
 
   await sql`
     CREATE TABLE IF NOT EXISTS invoice_items (
@@ -187,6 +190,25 @@ export async function initDB() {
       `
     }
   }
+
+  // Bootstrap exactly one super admin: the earliest-created admin account.
+  // No-ops once any super admin exists, so it never overrides a deliberate reassignment.
+  await sql`
+    UPDATE users SET is_super_admin = TRUE
+    WHERE id = (SELECT id FROM users WHERE is_admin = TRUE ORDER BY id ASC LIMIT 1)
+      AND NOT EXISTS (SELECT 1 FROM users WHERE is_super_admin = TRUE)
+  `
+}
+
+export async function ensureInvoiceShareToken(invoiceId: number): Promise<string> {
+  const rows = await sql`SELECT share_token FROM invoices WHERE id = ${invoiceId}`
+  if (rows.length === 0) throw new Error('Invoice not found')
+  if (rows[0].share_token) return rows[0].share_token as string
+
+  const { randomBytes } = await import('crypto')
+  const token = randomBytes(24).toString('hex')
+  await sql`UPDATE invoices SET share_token = ${token} WHERE id = ${invoiceId}`
+  return token
 }
 
 export async function nextInvoiceNumber(userId: number): Promise<string> {
