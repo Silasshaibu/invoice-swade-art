@@ -100,7 +100,57 @@ export default function PaymentsPage() {
   }
 
   const exportPDF = () => {
-    alert('PDF export coming soon')
+    const win = window.open('', '_blank')
+    if (!win) { alert('Please allow pop-ups to export as PDF.'); return }
+
+    const rows = filtered.map(p => `
+      <tr>
+        <td>PAY-${String(p.id).padStart(3, '0')}</td>
+        <td>${p.invoice_number || ''}</td>
+        <td>${p.client_name || ''}</td>
+        <td class="num">${fmt(Number(p.amount))}</td>
+        <td>${PAYMENT_METHODS[p.method || 'cash'] || p.method || ''}</td>
+        <td>${new Date(p.payment_date).toISOString().split('T')[0]}</td>
+        <td>${p.status || 'completed'}</td>
+      </tr>`).join('')
+
+    const total = filtered.reduce((sum, p) => sum + Number(p.amount || 0), 0)
+
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<title>Payments — ${new Date().toISOString().split('T')[0]}</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; color: #1e293b; padding: 40px; font-size: 13px; }
+  h1 { font-size: 20px; margin-bottom: 4px; }
+  .sub { color: #64748b; font-size: 13px; margin-bottom: 24px; }
+  table { width: 100%; border-collapse: collapse; }
+  th { background: #f8fafc; color: #64748b; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; padding: 8px 10px; text-align: left; border-bottom: 2px solid #e2e8f0; }
+  td { padding: 8px 10px; border-bottom: 1px solid #f1f5f9; }
+  .num { text-align: right; }
+  tfoot td { font-weight: 700; border-top: 2px solid #e2e8f0; padding-top: 10px; }
+  @media print { body { padding: 20px; } }
+</style>
+</head>
+<body>
+<h1>Payments</h1>
+<div class="sub">Exported ${new Date().toISOString().split('T')[0]} · ${filtered.length} transaction(s)</div>
+<table>
+  <thead>
+    <tr><th>Payment ID</th><th>Invoice</th><th>Client</th><th class="num">Amount</th><th>Method</th><th>Date</th><th>Status</th></tr>
+  </thead>
+  <tbody>${rows}</tbody>
+  <tfoot>
+    <tr><td colspan="3">Total</td><td class="num">${fmt(total)}</td><td colspan="3"></td></tr>
+  </tfoot>
+</table>
+</body>
+</html>`
+
+    win.document.write(html)
+    win.document.close()
   }
 
   return (
