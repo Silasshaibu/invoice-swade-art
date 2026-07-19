@@ -23,6 +23,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const user = userRows[0]
   const currency = inv.currency || user.currency || 'USD'
   const fmt = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(n)
+  const fmtDate = (d: unknown) => d ? new Date(d as string).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' }) : ''
 
   const itemRows = (items as { description: string; quantity: number; unit_price: number; amount: number }[]).map((item) => `
     <tr>
@@ -85,8 +86,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     <div style="font-size:16px;font-weight:600;color:#4f46e5;margin-top:4px;">${inv.invoice_number}</div>
     <div class="status-badge">${inv.status.toUpperCase()}</div>
     <div class="inv-dates">
-      <div>Issue Date: ${inv.issue_date}</div>
-      ${inv.due_date ? `<div>Due Date: ${inv.due_date}</div>` : ''}
+      <div>Issue Date: ${fmtDate(inv.issue_date)}</div>
+      ${inv.due_date ? `<div>Due Date: ${fmtDate(inv.due_date)}</div>` : ''}
     </div>
   </div>
 </div>
